@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+goodreads_books.json
+
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+.ipynb_checkpoints/
