@@ -36,61 +36,75 @@ def transformar_target_a_estrellas(target):
 
 #SACADO DEL EDA:
 def normalize_format(value):
+    #Si el valor no es un string:
     if not isinstance(value, str):
         return "UNKNOWN"
+    #Si no hay un valor para la muestra o es un espacio en blanco:
     s = value.strip().lower()
     if s == "":
         return "UNKNOWN"
+    if "unknown binding" in s or s == "unknown":
+        return "UNKNOWN"
 
-    # Ebook / digital
+    #Reemplazamos &amp; (código HTML para &) por solo &:
+    s = s.replace("&amp;", "&")
+
+    #Hacemos unas correcciones de cosas que aparecen frecuentemente en el dataset:
+    s = s.replace("papperback", "paperback")
+    s = s.replace("papaerback", "paperback")
+    s = s.replace("paberback", "paperback")
+    s = s.replace("hardcovver", "hardcover")
+    s = s.replace("hardover", "hardcover")
+    s = s.replace("harcover", "hardcover")
+
+
+    #Ebook (digital)
     ebook_terms = [
-        "ebook", "e-book", "kindle", "nook", "ibook", "epub", "pdf",
-        "online fiction", "online free", "online read", "online", "digital",
-        "e book", "e-book", "ebook and paperback", "ebook, paperback",
-        "nook ebook", "e-book .pdf", "e book, paperback", "e-pub", "ebook pdf"
+        "ebook", "e-book", "e book", "kindle", "nook", "nookbook", "ibook", "epub", "pdf", "electronic",
+        "digital", "online", "wattpad", "webtoon", "webcomic", "web comic", "online fiction", "online fanfiction",
+        "free online fiction", "free online read", "online read", "online serial", "online publication", "digital comic",
+        "fanfiction"
     ]
 
-    # Audio formats
+    #Formato de audios
     audio_terms = [
-        "audio", "audiobook", "audio cd", "mp3", "cassette", "audible",
-        "digital audio", "audio lecture", "audio book", "audiobook, audible",
-        "audio cassette", "mp3 audio", "mp3 book"
+        "audio", "audiobook", "audible", "audio cd", "audio cassette", "audio book",
+        "audio play", "audio lecture", "audio podcast", "mp3", "cd audio", "cassette",
+        "playaway", "digital audio", "overdrive audio"
     ]
 
-    # Hardcover / hardback
+    #Hardcover (hardback)
     hardcover_terms = [
-        "hardcover", "hard cover", "hardback", "hardbound", "slipcased",
-        "hardcover first edition", "hardcover comic", "hardcover (large print)",
-        "faux leather", "hardcover with slipcase", "hardcover art"
+        "hardcover", "hard cover", "hardback", "hardbound", "hard bound", "casebound", "library binding",
+        "school binding", "cloth bound", "clothbound", "leather bound", "leatherbound", "slipcased",
+        "slipcase", "flexbound", "hardcover with slipcase"
     ]
 
-    # Paperback / softcover
+    #Paperback (softcover)
     paperback_terms = [
-        "paperback", "softcover", "soft cover", "trade paperback",
-        "mass market paperback", "paper back", "paperbound", "pocket paperback",
-        "capa mole", "paper", "brochura", "broche", "book", "brochure",
-        "brossura", "paperback with dvd", "paperback with flaps",
-        "paperback (large print)", "perfect paperback", "paperback manga"
+        "paperback", "softcover", "soft cover", "trade paperback", "mass market paperback", "paper back",
+        "paperbound", "pocket paperback", "capa mole", "brochura", "broche", "brochure", "brossura", "paperback with dvd",
+        "paperback with flaps", "paperback (large print)", "perfect paperback", "mass paperback", "softback",
+        "quality paperback", "paperback manga", "spiral-bound", "spiral bound", "chapbook", "paper", 
     ]
 
-    # Comic / manga / graphic
-    comic_terms = [
-        "comic", "graphic novel", "manga", "webcomic", "fancomic", "comic book",
-        "digital comic", "comic book", "graphic"
-    ]
+    #Comic / manga / graphic
+    comic_terms = ["comic", "graphic novel", "manga", "comic book", "graphic", "manhwa", "manhua", "fancomic"]
 
-    s_norm = s.replace("&amp;", "&")
-
-    if any(term in s_norm for term in ebook_terms) and not any(term in s_norm for term in audio_terms):
-        return "EBOOK"
-    if any(term in s_norm for term in audio_terms):
+    if any(term in s for term in audio_terms):
         return "AUDIO"
-    if any(term in s_norm for term in hardcover_terms):
-        return "HARDCOVER"
-    if any(term in s_norm for term in paperback_terms):
-        return "PAPERBACK"
-    if any(term in s_norm for term in comic_terms):
+
+    if any(term in s for term in comic_terms):
         return "COMIC"
+
+    if any(term in s for term in hardcover_terms):
+        return "HARDCOVER"
+
+    if any(term in s for term in paperback_terms):
+        return "PAPERBACK"
+
+    if any(term in s for term in ebook_terms):
+        return "EBOOK"
 
     return "OTHER"
 
