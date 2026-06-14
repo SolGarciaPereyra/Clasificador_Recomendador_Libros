@@ -26,9 +26,8 @@ def transformar_features(df):
     df["num_pages"] = pd.to_numeric(df["num_pages"], errors='coerce')
     return df
 
-def transformar_target_a_estrellas(df_target):
-    df_target["stars"] = df_target["average_rating"].round().astype(int)
-    return df_target["stars"]
+def transformar_target_a_estrellas(target):
+    return target.round().astype(int)
 
 #SACADO DEL EDA:
 def normalize_format(value):
