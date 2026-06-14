@@ -10,15 +10,20 @@ def es_parte_de_saga(series):
     return len(series) > 0
 
 def transformar_features(df):
+    #Comento ciertas lienas porque esta funcion se tendria que aplica rluego del EDA, y:
+        #is_seriess --> nos sirve hacerlo antes de eda para hacer un buen analisis de su relacion con el target
+        #is_ebook --> no vamos a necesitar hacerlo porque la vamos a eliminar (redundancia con el one-hot de format_group)
+        #La de reagrupa format --> ya lo hago antes del EDA
+
     #is_series: feature binaria, true si es parte de una saga
-    df["is_series"] = df["series"].apply(es_parte_de_saga)
-    df = df.drop(columns = ["series"])
+    #df["is_series"] = df["series"].apply(es_parte_de_saga)
+    #df = df.drop(columns = ["series"])
     #is_ebook: si vemos que es importante, antes eliminar los datos que estan vacios #TODO
-    df["is_ebook"] = df["is_ebook"] == "true"
+    #df["is_ebook"] = df["is_ebook"] == "true"
     #format: una vez habiendo simplificado los formatos, aplicamos one hot encoding
-    df["format"] = df["format"].apply(normalize_format)
+    #df["format"] = df["format"].apply(normalize_format)
     encoder_format = OneHotEncoder(sparse_output=False)
-    encoded_format = encoder_format.fit_transform(df[['format']])
+    encoded_format = encoder_format.fit_transform(df[['format_group']])
     encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out())
     df = df.join(encoded_df)
     #publication_year, num_pages: transformar a numero (estaban en formato string) #TODO: eliminar o ver como imputar nan
