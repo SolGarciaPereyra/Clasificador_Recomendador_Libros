@@ -1,8 +1,8 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
-def limpiar_features_no_necesarias(df):
-    df_entrenamiento = df[["is_series", "is_ebook", "publication_year", "num_pages", 'format_AUDIO', 'format_COMIC', 'format_EBOOK', 'format_HARDCOVER', 'format_OTHER', 'format_PAPERBACK', 'format_UNKNOWN']] 
+def limpiar_features_no_necesarias(df, lista_features = ["is_series", "is_ebook", "publication_year", "num_pages", 'format_AUDIO', 'format_COMIC', 'format_EBOOK', 'format_HARDCOVER', 'format_OTHER', 'format_PAPERBACK', 'format_UNKNOWN']):
+    df_entrenamiento = df[lista_features] 
     return df_entrenamiento
 
 def es_parte_de_saga(series):
