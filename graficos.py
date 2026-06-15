@@ -1,5 +1,7 @@
+import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+
 
 def plot_rating(df): #
     plt.hist(df["average_rating"], bins=50, edgecolor="white")
@@ -80,3 +82,46 @@ def plot_cantidad_generos_por_libro(df):
 
     plt.tight_layout()
     plt.show()
+
+def plot_boxplot_rating_por_formato(df_us_en):
+    plt.figure(figsize = (6, 6))
+    sns.boxplot(data = df_us_en, x = "format_group", y = "average_rating")
+    plt.xlabel("Format group")
+    plt.ylabel("Average rating")
+    plt.title("average_rating vs format_group", fontweight = "bold")
+    plt.xticks(rotation = 45)
+    plt.show()
+
+def plot_boxplot_rating_por_is_series(df_us_en):
+    plt.figure(figsize = (6, 6))
+    sns.boxplot(data  = df_us_en, x = "is_series", y = "average_rating")
+    plt.xlabel("Es parte de una saga")
+    plt.ylabel("Average rating")
+    plt.title("average_rating vs is_series", fontweight = "bold")
+    plt.show()
+
+def plot_scatte_rating_por_num_pages(df_us_en):
+    plt.figure(figsize = (6, 6))
+    sns.scatterplot(data = df_us_en, x = "num_pages", y = "average_rating", alpha = 0.6)
+    plt.xlabel("Numero de paginas")
+    plt.ylabel("Rating promedio")
+    plt.title("num_pages vs average_rating", fontweight = "bold")
+    plt.show()
+
+def plot_scatte_rating_por_publication_year(df_us_en):
+    plt.figure(figsize = (6, 6))
+    sns.scatterplot(data = df_us_en, x = "publication_year", y = "average_rating", alpha = 0.6)
+    plt.xlabel("Año de publicacion")
+    plt.ylabel("Rating promedio")
+    plt.title("publication_year vs average_rating", fontweight = "bold")
+    plt.show()
+
+def plot_boxplot_rating_por_autor_frecuent(df_top):
+    plt.figure(figsize = (10, 6))
+    sns.boxplot(data = df_top, x = "author_id", y = "average_rating")
+    plt.xlabel("Autor")
+    plt.ylabel("Average rating")
+    plt.title("Distribución de ratings en los autores con más libros", fontweight = "bold")
+    plt.xticks(rotation = 45)
+    plt.show()
+
