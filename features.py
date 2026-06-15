@@ -177,7 +177,6 @@ def extraer_generos_libro(shelves):
         top6.append(genero)
     return top6
 
-
 """features que podemos volar
 - isbn: podemos eliminar? o nos sirve para el mini recomendador
 - text_reviews count: ok, pero no se usa en el entrenamiento
