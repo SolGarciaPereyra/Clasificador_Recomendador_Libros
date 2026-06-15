@@ -148,21 +148,35 @@ MAPEO_GENEROS = {"fiction": fiction_terms, "non fiction": non_fiction_terms, "fa
 "memoir": memoir_terms, "self help": self_help_terms, "history": history_terms, "psychology": psychology_terms, "poetry": poetry_terms, 
 "classics": classics_terms, "graphic novel": graphic_novel_terms, "short stories": short_stories_terms, "humor": humor_terms, "religion": religion_terms}
 
+def obtener_score(item):
+    genero, score = item
+    return score
+
 def extraer_generos_libro(shelves):
-    generos = set()
+    generos = {}
 
     for shelf in shelves:
         nombre = shelf["name"].lower()
-        if nombre in generos_compuestos:
-            tokens = [nombre]
-        else:
-            tokens = nombre.split("-")
+        count = int(shelf["count"])
 
+        #separo los generos con guion en el medio, a menos que esten en la lista de los que se permiten
+        if nombre in generos_compuestos:
+            palabras = [nombre]
+        else:
+            palabras = nombre.split("-")
+
+        #verifico si las palabras corresponden con algun genero definido en las listas de mas arriba
         for genero, terminos in MAPEO_GENEROS.items():
             for termino in terminos:
-                if termino in tokens:
-                    generos.add(genero)
-    return list(generos)
+                if termino in palabras:
+                    generos[genero] = generos.get(genero, 0) + count
+    
+    generos_ordenados = sorted(generos.items(), key = obtener_score, reverse=True)
+    top6 = []
+    for genero, score in generos_ordenados[:6]:
+        top6.append(genero)
+    return top6
+
 
 """features que podemos volar
 - isbn: podemos eliminar? o nos sirve para el mini recomendador
