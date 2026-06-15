@@ -108,6 +108,62 @@ def normalize_format(value):
 
     return "OTHER"
 
+#ANALISIS DE GENEROS
+generos_compuestos = ["science-fiction", "young-adult", "non-fiction", "sci-fi", "self-help"] #generos que no hay que separar
+
+fiction_terms = ["fiction", "novel", "novels", "narrativa", "lit", "literary", "literature"]
+non_fiction_terms = ["non-fiction", "nonfiction", "nonfic", "nf"]
+fantasy_terms = ["fantasy", "magic", "magical", "witches", "dragons", "fae", "high"]
+science_fiction_terms = ["science-fiction", "sci-fi", "scifi", "sf", "sciencefiction", "science fiction", "futuristic", "space", "aliens"]
+mystery_terms = ["mystery", "mysteries", "detective", "detectives", "cozy", "cozies"]
+thriller_terms = ["thriller", "thrillers", "suspense", "psychological"]
+romance_terms = ["romance", "romances", "romantic", "chick", "lovers"]
+horror_terms = ["horror", "scary", "creepy", "gothic"]
+historical_terms = ["historical", "victorian", "medieval", "regency"]
+young_adult_terms = ["ya", "young-adult", "young adult", "teen", "teens","tween"]
+children_terms = ["children", "childrens", "kids", "picture", "picturebooks", "kindergarten", "preschool", "elementary"]
+adventure_terms = ["adventure", "action", "survival"]
+contemporary_terms = ["contemporary", "modern", "realistic"]
+dystopian_terms = ["dystopian", "dystopia", "apocalyptic", "apocalypse", "postapocalyptic"]
+paranormal_terms = ["paranormal", "supernatural"]
+urban_terms = ["urban", "urban fantasy"] #urban fantasy
+crime_terms = ["crime", "truecrime", "police"]
+biography_terms = ["biography", "biographies", "bio", "biographical"]
+memoir_terms = ["memoir", "memoirs", "autobiography", "autobiographical"]
+self_help_terms = ["self-help", "self help", "selfhelp", "selfimprovement", "selfdevelopment", "personaldevelopment", "personalgrowth", "leadership"]
+history_terms = ["history", "historical", "historial"]
+psychology_terms = ["psychology", "mentalhealth, mentalillness", "mental", "health", "illness", "mental health", "metal illness"]
+philosophy_terms = ["philosophy", "philosophical"]
+poetry_terms = ["poetry", "poems", "poem", "verse"]
+classics_terms = ["classics", "classic", "classical", "literary"]
+graphic_novel_terms = ["graphic-novel", "graphicnovel", "graphic", "graphic novel", "comics", "comic", "manga", "mangas"]
+short_stories_terms = ["short stories", "short", "shortstories", "shorts", "shortstory", "anthology", "amthologies", "novella", "novellas"]
+humor_terms = ["humor", "humour", "humorous", "funny", "comedy", "satire"]
+religion_terms = ["religion", "religious", "christian", "christianity", "theology", "spiritual", "spirituality", "faith"]
+
+MAPEO_GENEROS = {"fiction": fiction_terms, "non fiction": non_fiction_terms, "fantasy": fantasy_terms, "science fiction": science_fiction_terms,
+"mystery": mystery_terms, "thriller": thriller_terms, "romance": romance_terms, "horror": horror_terms, "historical": historical_terms, 
+"young adult": young_adult_terms, "children": children_terms, "adventure": adventure_terms, "contemporary": contemporary_terms,
+"dystopian": dystopian_terms, "paranormal": paranormal_terms, "urban": urban_terms, "crime": crime_terms, "biography": biography_terms, 
+"memoir": memoir_terms, "self help": self_help_terms, "history": history_terms, "psychology": psychology_terms, "poetry": poetry_terms, 
+"classics": classics_terms, "graphic novel": graphic_novel_terms, "short stories": short_stories_terms, "humor": humor_terms, "religion": religion_terms}
+
+def extraer_generos_libro(shelves):
+    generos = set()
+
+    for shelf in shelves:
+        nombre = shelf["name"].lower()
+        if nombre in generos_compuestos:
+            tokens = [nombre]
+        else:
+            tokens = nombre.split("-")
+
+        for genero, terminos in MAPEO_GENEROS.items():
+            for termino in terminos:
+                if termino in tokens:
+                    generos.add(genero)
+    return list(generos)
+
 """features que podemos volar
 - isbn: podemos eliminar? o nos sirve para el mini recomendador
 - text_reviews count: ok, pero no se usa en el entrenamiento
