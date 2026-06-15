@@ -179,17 +179,17 @@ def extraer_generos_libro(shelves):
 - description: ver como tratarla
 - format: transformarlo con one hot encoding
 - publication_month: volar
-- publication_year: lo dejamos asi
+- publication_year: lo dejamos asi --> eliminar outliers y, tambien los datos erroneos? --> que hacemos con sus NaN??
 - url: no se si nos sirve, tal vez para despues. diria que volar
 - image_url: volar
 - book_id: ni idea
-- ratings count: dejar asi
+- ratings count: dejar asi --> eliminar...??
 - work id: volar
 - titulo: nos lo quedamos asi pero no lo usamos para el entrenamiento
 - title_without_series: volar, nos quedamos solo con el titulo
 - authors: es un diccionario: como lo tratamos
 - publisher: transformar a bool de si tiene publisher o no?
-- num_pages: nos lo quedamos asi
+- num_pages: nos lo quedamos asi --> eliminar outliers y valores ilogicos --> que hacemos con sus NaN??
 - publication_day: volar
 - isbn13: volar
 """
