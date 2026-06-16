@@ -116,12 +116,20 @@ def plot_scatte_rating_por_publication_year(df_us_en):
     plt.title("publication_year vs average_rating", fontweight = "bold")
     plt.show()
 
-def plot_boxplot_rating_por_autor_frecuent(df_top):
+def plot_boxplot_rating_por_autor_frecuent(df_top, titulo):
     plt.figure(figsize = (10, 6))
     sns.boxplot(data = df_top, x = "author_id", y = "average_rating")
+    plt.ylim(0, 5)
     plt.xlabel("Autor")
     plt.ylabel("Average rating")
-    plt.title("Distribución de ratings en los autores con más libros", fontweight = "bold")
+    plt.title(titulo)
     plt.xticks(rotation = 45)
     plt.show()
 
+
+def plot_correlacion_features(corr_rating):
+    plt.figure(figsize=(8, max(8, len(corr_rating) * 0.3)))
+    sns.heatmap(corr_rating.to_frame(),annot=True,cmap="coolwarm",center=0,fmt=".2f")
+    plt.title("Correlación de las features con average_rating")
+    plt.tight_layout()
+    plt.show()

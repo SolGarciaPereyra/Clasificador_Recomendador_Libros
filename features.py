@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, MultiLabelBinarizer
 
 def limpiar_features_no_necesarias(df, lista_features = ["is_series", "is_ebook", "publication_year", "num_pages", 'format_AUDIO', 'format_COMIC', 'format_EBOOK', 'format_HARDCOVER', 'format_OTHER', 'format_PAPERBACK', 'format_UNKNOWN']):
     df_entrenamiento = df[lista_features] 
@@ -9,26 +9,20 @@ def es_parte_de_saga(series):
     #la feature series contiene una lista vacia si es un standalone, o un codigo si es parte de una saga
     return len(series) > 0
 
-def transformar_features(df):
-    #Comento ciertas lienas porque esta funcion se tendria que aplica rluego del EDA, y:
-        #is_seriess --> nos sirve hacerlo antes de eda para hacer un buen analisis de su relacion con el target
-        #is_ebook --> no vamos a necesitar hacerlo porque la vamos a eliminar (redundancia con el one-hot de format_group)
-        #La de reagrupa format --> ya lo hago antes del EDA
-
-    #is_series: feature binaria, true si es parte de una saga
-    #df["is_series"] = df["series"].apply(es_parte_de_saga)
-    #df = df.drop(columns = ["series"])
-    #is_ebook: si vemos que es importante, antes eliminar los datos que estan vacios #TODO
-    #df["is_ebook"] = df["is_ebook"] == "true"
+def one_hot_format(df):
     #format: una vez habiendo simplificado los formatos, aplicamos one hot encoding
-    #df["format"] = df["format"].apply(normalize_format)
     encoder_format = OneHotEncoder(sparse_output=False)
-    encoded_format = encoder_format.fit_transform(df[['format_group']])
-    encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out())
+    encoded_format = encoder_format.fit_transform(df[["format_group"]])
+    encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out(["format_group"]), index = df.index)
     df = df.join(encoded_df)
-    #publication_year, num_pages: transformar a numero (estaban en formato string) #TODO: eliminar o ver como imputar nan
-    df["publication_year"] = pd.to_numeric(df["publication_year"], errors='coerce')
-    df["num_pages"] = pd.to_numeric(df["num_pages"], errors='coerce')
+    return df
+
+def multi_binarizer_genre(df):
+    #misma logica que one hot pero permite varias features en 1
+    mlb = MultiLabelBinarizer()
+    genres_encoded = mlb.fit_transform(df["genres"])
+    genres_df = pd.DataFrame(genres_encoded, columns = mlb.classes_, index = df.index)
+    df = df.join(genres_df)
     return df
 
 def transformar_target_a_estrellas(target):
