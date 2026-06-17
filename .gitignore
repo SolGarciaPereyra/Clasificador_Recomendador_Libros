@@ -4,6 +4,7 @@ __pycache__/
 goodreads_books.json
 goodreads_us_english_sinNaN.json
 goodreads_us_english.json
+goodreads_us_english_primer_filtrado.json
 
 *.aux
 *.log
