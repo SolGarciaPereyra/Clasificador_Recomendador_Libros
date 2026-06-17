@@ -15,20 +15,5 @@ def evaluar_metricas_clasificacion(y_pred, y):
     f1 = f1_score(y, y_pred, average = "macro")
     return accuracy, precision, recall, f1
 
-def tabla_metricas_regresion(metricas_train, metricas_val):
-    return pd.DataFrame(
-        {
-            "Train": metricas_train,
-            "Validation": metricas_val
-        },
-        index=["MSE", "RMSE", "MAE", "R²"]
-    )
-
-def tabla_metricas_clasificacion(metricas_train, metricas_val):
-    return pd.DataFrame(
-        {
-            "Train": metricas_train,
-            "Validation": metricas_val
-        },
-        index=["Accuracy", "Precision", "Recall", "F1"]
-    )
+def tabla_metricas(metricas_train, metricas_val, nombres_metricas):
+    return pd.DataFrame({"Train": metricas_train, "Validation": metricas_val}, index=["MSE", "RMSE", "MAE", "R²"])
