@@ -16,4 +16,5 @@ def evaluar_metricas_clasificacion(y_pred, y):
     return accuracy, precision, recall, f1
 
 def tabla_metricas(metricas_train, metricas_val, nombres_metricas):
-    return pd.DataFrame({"Train": metricas_train, "Validation": metricas_val}, index=["MSE", "RMSE", "MAE", "R²"])
+    return pd.DataFrame({"Train": metricas_train, "Validation": metricas_val}, index=nombres_metricas)
+

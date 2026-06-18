@@ -133,3 +133,19 @@ def plot_correlacion_features(corr_rating):
     plt.title("Correlación de las features con average_rating")
     plt.tight_layout()
     plt.show()
+
+def plot_confusion_matrix(cm_train, cm_val):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    sns.heatmap(cm_train, annot=True, fmt="d", ax=axes[0])
+    axes[0].set_title("Train")
+    axes[0].set_xlabel("Predicción")
+    axes[0].set_ylabel("Real")
+
+    sns.heatmap(cm_val, annot=True, fmt="d", ax=axes[1])
+    axes[1].set_title("Validation")
+    axes[1].set_xlabel("Predicción")
+    axes[1].set_ylabel("Real")
+
+    plt.tight_layout()
+    plt.show()
