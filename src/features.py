@@ -202,7 +202,7 @@ def detectar_language_code(fila):
     except:
         return "unknown"
 
-def generar_embeddings_pca(textos_variables, modelo, componentes_conservar = 50, batch_size = 1000):
+def entrenar_pca_para_texto(textos_variables, modelo, componentes_conservar = 50, batch_size = 1000):
     #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
     textos_variables = textos_variables.fillna("").astype(str).tolist()
     #Decidimos usar el PCA incremental proque nos permite procesar los datos en bloques, sin cargar 
@@ -217,6 +217,12 @@ def generar_embeddings_pca(textos_variables, modelo, componentes_conservar = 50,
         #Ajustamos el PCA:
         incremental_pca.partial_fit(embedding)
 
+    return incremental_pca
+
+def generar_embeddings_pca(textos_variables, modelo, incremental_pca, batch_size = 1000):
+    #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
+    textos_variables = textos_variables.fillna("").astype(str).tolist()
+    
     #Ahora si reducimos todos los datos:
     embeddings_reducidos = []
     for pos in range(0, len(textos_variables), batch_size):
