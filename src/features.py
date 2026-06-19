@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, MultiLabelBinarizer
+from langdetect import detect, DetectorFactory
 
 def limpiar_features_no_necesarias(df, lista_features = ["is_series", "is_ebook", "publication_year", "num_pages", 'format_AUDIO', 'format_COMIC', 'format_EBOOK', 'format_HARDCOVER', 'format_OTHER', 'format_PAPERBACK', 'format_UNKNOWN']):
     df_entrenamiento = df[lista_features] 
@@ -170,6 +171,26 @@ def extraer_generos_libro(shelves):
     for genero, score in generos_ordenados[:6]:
         top6.append(genero)
     return top6
+
+def detectar_language_code(fila):
+    try:
+        descripcion = str(fila["description"]).strip()
+        #Priorizarmos detectar el idioma usando la feature "description" si es que tiene suficiente texto:
+        if ((pd.notna(descripcion)) and (len(descripcion) > 50)):
+            return detect(descripcion)
+        
+        #Pero, si la muestra no tiene descripción, usamos el titulo:
+        title = str(fila["title"]).strip()
+        if len(title) > 0:
+            return detect(title)
+
+        #Es el caso en el que la muestra no tiene ni titulo ni descripcion lo suficientemente larga:
+        return "unknown"
+
+    #Entramos si salta algun error en la seccion "try" (ej: no existe alguna de las dos columans mencioandas, o las funciones
+    #usadas tiran algun error)
+    except:
+        return "unknown"
 
 """features que podemos volar
 - isbn: podemos eliminar? o nos sirve para el mini recomendador
