@@ -12,12 +12,12 @@ def es_parte_de_saga(series):
     #la feature series contiene una lista vacia si es un standalone, o un codigo si es parte de una saga
     return len(series) > 0
 
-def one_hot_format(df):
-    #format: una vez habiendo simplificado los formatos, aplicamos one hot encoding
-    encoder_format = OneHotEncoder(sparse_output=False)
-    encoded_format = encoder_format.fit_transform(df[["format_group"]])
-    encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out(["format_group"]), index = df.index)
-    df = df.join(encoded_df)
+def multi_binarizer_format(df):
+    #misma logica que one hot pero permite varias features en 1
+    mlb = MultiLabelBinarizer()
+    format_encoded = mlb.fit_transform(df["format_group"])
+    format_df = pd.DataFrame(format_encoded, columns = mlb.classes_, index = df.index)
+    df = df.join(format_df)
     return df
 
 def one_hot_language(df):
@@ -222,7 +222,7 @@ def entrenar_pca_para_texto(textos_variables, modelo, componentes_conservar = 50
 def generar_embeddings_pca(textos_variables, modelo, incremental_pca, batch_size = 1000):
     #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
     textos_variables = textos_variables.fillna("").astype(str).tolist()
-    
+
     #Ahora si reducimos todos los datos:
     embeddings_reducidos = []
     for pos in range(0, len(textos_variables), batch_size):

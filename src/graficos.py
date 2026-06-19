@@ -126,7 +126,6 @@ def plot_boxplot_rating_por_autor_frecuent(df_top, titulo):
     plt.xticks(rotation = 45)
     plt.show()
 
-
 def plot_correlacion_features(corr_rating):
     plt.figure(figsize=(8, max(8, len(corr_rating) * 0.3)))
     sns.heatmap(corr_rating.to_frame(),annot=True,cmap="coolwarm",center=0,fmt=".2f")
@@ -148,4 +147,13 @@ def plot_confusion_matrix(cm_train, cm_val):
     axes[1].set_ylabel("Real")
 
     plt.tight_layout()
+    plt.show()
+
+def plot_boxplot_rating_por_cant_generos(df_us_en_1_filtro):
+    #Grafico la relacion entre cantidad_generos y average_rating:
+    plt.figure(figsize = (10, 6))
+    sns.boxplot(data = df_us_en_1_filtro, x = "cantidad_generos", y = "average_rating")
+    plt.xlabel("Cantidad de géneros")
+    plt.ylabel("Average rating")
+    plt.title("Relación entre cantidad de géneros y rating", fontweight = "bold")
     plt.show()
