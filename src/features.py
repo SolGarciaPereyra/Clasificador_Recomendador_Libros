@@ -1,6 +1,8 @@
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import OneHotEncoder, MultiLabelBinarizer
 from langdetect import detect, DetectorFactory
+from sklearn.decomposition import IncrementalPCA
 
 def limpiar_features_no_necesarias(df, lista_features = ["is_series", "is_ebook", "publication_year", "num_pages", 'format_AUDIO', 'format_COMIC', 'format_EBOOK', 'format_HARDCOVER', 'format_OTHER', 'format_PAPERBACK', 'format_UNKNOWN']):
     df_entrenamiento = df[lista_features] 
@@ -15,6 +17,14 @@ def one_hot_format(df):
     encoder_format = OneHotEncoder(sparse_output=False)
     encoded_format = encoder_format.fit_transform(df[["format_group"]])
     encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out(["format_group"]), index = df.index)
+    df = df.join(encoded_df)
+    return df
+
+def one_hot_language(df):
+    #language: una vez habiendo simplificado e imputado los language_code, aplicamos one hot encoding
+    encoder_format = OneHotEncoder(sparse_output=False)
+    encoded_format = encoder_format.fit_transform(df[["language_code"]])
+    encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out(["language_code"]), index = df.index)
     df = df.join(encoded_df)
     return df
 
@@ -191,6 +201,34 @@ def detectar_language_code(fila):
     #usadas tiran algun error)
     except:
         return "unknown"
+
+def generar_embeddings_pca(textos_variables, modelo, componentes_conservar = 50, batch_size = 1000):
+    #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
+    textos_variables = textos_variables.fillna("").astype(str).tolist()
+    #Decidimos usar el PCA incremental proque nos permite procesar los datos en bloques, sin cargar 
+    #todo en memoria (util por nuestra cantidad de muestras, asi no llena la RAM)
+    incremental_pca = IncrementalPCA(n_components = componentes_conservar)
+
+    #Ahora, tenemos que hacer un mini entrenamiento del PCA, ajustandolo mediante batches de datos
+    for num in range(0, len(textos_variables), batch_size):
+        batch = textos_variables[num: num + batch_size]
+        #generamos los mebeddings para este batch, usando el modelo pre-entrenado:
+        embedding = modelo.encode(batch, convert_to_numpy = True, show_progress_bar = False)
+        #Ajustamos el PCA:
+        incremental_pca.partial_fit(embedding)
+
+    #Ahora si reducimos todos los datos:
+    embeddings_reducidos = []
+    for pos in range(0, len(textos_variables), batch_size):
+        batch = textos_variables[pos : pos + batch_size]
+        embedding = modelo.encode(batch, convert_to_numpy = True, show_progress_bar = False)
+        #Aplicamos la transformacion PCA que entrenamos antes
+        embedding_reducido = incremental_pca.transform(embedding)
+        embeddings_reducidos.append(embedding_reducido)
+
+    #Unimos todos los batches reducidos en un solo array
+    embeddings_reducidos = np.vstack(embeddings_reducidos)
+    return embeddings_reducidos
 
 """features que podemos volar
 - isbn: podemos eliminar? o nos sirve para el mini recomendador
