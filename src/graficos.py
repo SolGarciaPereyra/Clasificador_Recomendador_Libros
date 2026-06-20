@@ -193,7 +193,7 @@ def plot_learning_curves_linear_regression(X_train_scaled, y_train_regresion, X_
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
 
-def plot_learning_curves_logistic_regression(X_train_scaled, y_train_regresion, X_val_scaled, y_val_clasificacion):
+def plot_learning_curves_logistic_regression(X_train_scaled, y_train_clasificacion, X_val_scaled, y_val_clasificacion, tecnica_rebalanceo, modelo_class_weight = None):
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
@@ -202,25 +202,25 @@ def plot_learning_curves_logistic_regression(X_train_scaled, y_train_regresion, 
         cant_muestras = int(len(X_train_scaled) * porcentaje)
         indices = np.random.choice(len(X_train_scaled), size = cant_muestras, replace = False)
         X_sub = X_train_scaled[indices]
-        y_sub = y_train_regresion[indices]
+        y_sub = y_train_clasificacion[indices]
         #Creamos y entrenamos el modelo de Regresion Logistica:
-        modelo = LogisticRegression(max_iter = 1000)
-        modelo.fit(X_sub, y_sub)
+        modelo_actual = LogisticRegression(max_iter = 1000, class_weight = modelo_class_weight)
+        modelo_actual.fit(X_sub, y_sub)
         #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
-        pred_train = modelo.predict(X_sub)
+        pred_train = modelo_actual.predict(X_sub)
         #Y predecimos sobre el conjunto de validacion (para ver el error de val):
-        pred_val = modelo.predict(X_val_scaled)
+        pred_val = modelo_actual.predict(X_val_scaled)
         #Calculamos ambos errores:
-        f1_train.append(f1_score(y_sub, pred_train, average = "weighted"))
-        f1_val.append(f1_score(y_val_clasificacion, pred_val, average="weighted"))
+        f1_train.append(f1_score(y_sub, pred_train, average = "macro"))
+        f1_val.append(f1_score(y_val_clasificacion, pred_val, average = "macro"))
 
     #Ahora graficamos las curvas:
     plt.figure(figsize = (6, 6))
     plt.plot(porcentajes, f1_train, label = 'Train')
     plt.plot(porcentajes, f1_val, label = 'Validation')
     plt.xlabel("Porcentaje del dataset de entrenamiento")
-    plt.ylabel("F1 Score")
-    plt.title("Learning Curve - Regresión Logística", fontweight = "bold")
+    plt.ylabel("F1 Score Macro")
+    plt.title(f"Learning Curve - Regresión Logística + {tecnica_rebalanceo}", fontweight = "bold")
     plt.legend()
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
