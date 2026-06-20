@@ -312,3 +312,14 @@ def plot_comparacion_metricas(metricas_dict, title):
     plt.legend(title="Métrica")
     plt.tight_layout()
     plt.show()
+
+def plot_feature_importance_regression(coeficientes):
+    top = coeficientes.head(20)
+    plt.figure(figsize = (6, 6))
+    plt.barh(top["feature"], top["abs_coef"])
+    plt.xlabel("|Coeficiente|")
+    plt.ylabel("Feature")
+    plt.title("Feature Importance - Regresion Lineal", fontweight = "bold")
+    plt.gca().invert_yaxis()
+    plt.show()
+
