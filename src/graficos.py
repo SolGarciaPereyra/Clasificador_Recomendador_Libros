@@ -1,6 +1,9 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics import mean_squared_error, f1_score
 
 
 def plot_rating(df): #
@@ -156,4 +159,68 @@ def plot_boxplot_rating_por_cant_generos(df_us_en_1_filtro):
     plt.xlabel("Cantidad de géneros")
     plt.ylabel("Average rating")
     plt.title("Relación entre cantidad de géneros y rating", fontweight = "bold")
+    plt.show()
+
+def plot_learning_curves_linear_regression(X_train_scaled, y_train_regresion, X_val_scaled, y_val_regresion):
+    porcentajes = np.linspace(0.1, 1.0, 10)
+    rmse_train = []
+    rmse_val = []
+    for porcentaje in porcentajes:
+        #Calculamos cuantas muestras corresponden a este porcentaje:
+        cant_muestras = int(len(X_train_scaled) * porcentaje)
+        indices = np.random.choice(len(X_train_scaled), size = cant_muestras, replace = False)
+        X_sub = X_train_scaled[indices]
+        y_sub = y_train_regresion[indices]
+        #Creamos y entrenamos el modelo de Regresion Lineal:
+        modelo = LinearRegression()
+        modelo.fit(X_sub, y_sub)
+        #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
+        pred_train = modelo.predict(X_sub)
+        #Y predecimos sobre el conjunto de validacion (para ver el error de val):
+        pred_val = modelo.predict(X_val_scaled)
+        #Calculamos ambos errores:
+        rmse_train.append(np.sqrt(mean_squared_error(y_sub, pred_train)))
+        rmse_val.append(np.sqrt(mean_squared_error(y_val_regresion, pred_val)))
+
+    #Ahora graficamos las curvas:
+    plt.figure(figsize = (6, 6))
+    plt.plot(porcentajes, rmse_train, label = "Train")
+    plt.plot(porcentajes, rmse_val, label = "Validacion")
+    plt.xlabel("Porcentaje del dataset de entrenamiento")
+    plt.ylabel("RMSE")
+    plt.title("Learning Curve - Regresión Lineal", fontweight = "bold")
+    plt.legend()
+    plt.grid(True, linestyle = '--', alpha = 0.7)
+    plt.show()
+
+def plot_learning_curves_logistic_regression(X_train_scaled, y_train_regresion, X_val_scaled, y_val_clasificacion):
+    porcentajes = np.linspace(0.1, 1.0, 10)
+    f1_train = []
+    f1_val = []
+    for porcentaje in porcentajes:
+        #Calculamos cuantas muestras corresponden a este porcentaje:
+        cant_muestras = int(len(X_train_scaled) * porcentaje)
+        indices = np.random.choice(len(X_train_scaled), size = cant_muestras, replace = False)
+        X_sub = X_train_scaled[indices]
+        y_sub = y_train_regresion[indices]
+        #Creamos y entrenamos el modelo de Regresion Logistica:
+        modelo = LogisticRegression(max_iter = 1000)
+        modelo.fit(X_sub, y_sub)
+        #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
+        pred_train = modelo.predict(X_sub)
+        #Y predecimos sobre el conjunto de validacion (para ver el error de val):
+        pred_val = modelo.predict(X_val_scaled)
+        #Calculamos ambos errores:
+        f1_train.append(f1_score(y_sub, pred_train, average = "weighted"))
+        f1_val.append(f1_score(y_val_clasificacion, pred_val, average="weighted"))
+
+    #Ahora graficamos las curvas:
+    plt.figure(figsize = (6, 6))
+    plt.plot(porcentajes, f1_train, label = 'Train')
+    plt.plot(porcentajes, f1_val, label = 'Validation')
+    plt.xlabel("Porcentaje del dataset de entrenamiento")
+    plt.ylabel("F1 Score")
+    plt.title("Learning Curve - Regresión Logística", fontweight = "bold")
+    plt.legend()
+    plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
