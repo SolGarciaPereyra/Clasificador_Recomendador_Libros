@@ -4,13 +4,14 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, f1_score
+from xgboost import XGBRegressor
 
 
 def plot_rating(df): #
     plt.hist(df["average_rating"], bins=50, edgecolor="white")
     plt.xlabel("Rating Promedio")
     plt.ylabel("Cantidad de libros")
-    plt.title("Distribución de ratings")
+    plt.title("Distribución de ratings", fontweight = "bold")
     plt.show()
 
 def plot_boxplot_rating(df):
@@ -18,7 +19,7 @@ def plot_boxplot_rating(df):
     plt.boxplot(ratings,vert=True,patch_artist=True)
 
     plt.ylabel("Rating promedio")
-    plt.title("Distribución de ratings")
+    plt.title("Distribución de ratings", fontweight = "bold")
 
     plt.grid(axis="y", alpha=0.3)
     plt.tight_layout()
@@ -30,7 +31,7 @@ def plot_stars(df): #
     
     plt.xlabel("Estrellas")
     plt.ylabel("% de libros")
-    plt.title("Distribución de estrellas")
+    plt.title("Distribución de estrellas", fontweight = "bold")
     
     for bar in bars:
         altura = bar.get_height()
@@ -42,7 +43,7 @@ def plot_generos_mas_frecuentes(contador_generos): #
     plt.figure(figsize=(10, 6))
     plt.barh(contador_ordenado.index, contador_ordenado.values)
 
-    plt.title("Géneros más frecuentes")
+    plt.title("Géneros más frecuentes", fontweight = "bold")
     plt.xlabel("Frecuencia")
     plt.ylabel("Género")
     plt.tight_layout()
@@ -56,7 +57,7 @@ def plot_rating_por_genero(df): #
     plt.barh(promedio_rating.index, promedio_rating.values)
     plt.xlabel("Average Rating")
     plt.ylabel("Género")
-    plt.title("Rating promedio por género")
+    plt.title("Rating promedio por género", fontweight = "bold")
     plt.tight_layout()
     plt.show()
 
@@ -67,7 +68,7 @@ def plot_boxplot_rating_por_genero(df): #
 
     plt.xlabel("Género")
     plt.ylabel("Average Rating")
-    plt.title("Distribución de ratings por género")
+    plt.title("Distribución de ratings por género", fontweight = "bold")
     plt.suptitle("")  # elimina el titulo automático de pandas
     plt.tight_layout()
     plt.show()
@@ -81,7 +82,7 @@ def plot_cantidad_generos_por_libro(df):
 
     plt.xlabel("Cantidad de géneros")
     plt.ylabel("Cantidad de libros")
-    plt.title("Distribución de géneros por libro")
+    plt.title("Distribución de géneros por libro", fontweight = "bold")
 
     plt.tight_layout()
     plt.show()
@@ -125,14 +126,14 @@ def plot_boxplot_rating_por_autor_frecuent(df_top, titulo):
     plt.ylim(0, 5)
     plt.xlabel("Autor")
     plt.ylabel("Average rating")
-    plt.title(titulo)
+    plt.title(titulo, fontweight = "bold")
     plt.xticks(rotation = 45)
     plt.show()
 
 def plot_correlacion_features(corr_rating):
     plt.figure(figsize=(8, max(8, len(corr_rating) * 0.3)))
     sns.heatmap(corr_rating.to_frame(),annot=True,cmap="coolwarm",center=0,fmt=".2f")
-    plt.title("Correlación de las features con average_rating")
+    plt.title("Correlación de las features con average_rating", fontweight = "bold")
     plt.tight_layout()
     plt.show()
 
@@ -140,12 +141,12 @@ def plot_confusion_matrix(cm_train, cm_val):
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     sns.heatmap(cm_train, annot=True, fmt="d", ax=axes[0])
-    axes[0].set_title("Train")
+    axes[0].set_title("Train", fontweight = "bold")
     axes[0].set_xlabel("Predicción")
     axes[0].set_ylabel("Real")
 
     sns.heatmap(cm_val, annot=True, fmt="d", ax=axes[1])
-    axes[1].set_title("Validation")
+    axes[1].set_title("Validation", fontweight = "bold")
     axes[1].set_xlabel("Predicción")
     axes[1].set_ylabel("Real")
 
@@ -221,6 +222,70 @@ def plot_learning_curves_logistic_regression(X_train_scaled, y_train_clasificaci
     plt.xlabel("Porcentaje del dataset de entrenamiento")
     plt.ylabel("F1 Score Macro")
     plt.title(f"Learning Curve - Regresión Logística + {tecnica_rebalanceo}", fontweight = "bold")
+    plt.legend()
+    plt.grid(True, linestyle = '--', alpha = 0.7)
+    plt.show()
+
+def plot_learning_curves_xgboost_regression(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, learning_rate = 0.05, subsample = 0.8, colsample_bytree = 0.8, objective = "reg:squarederror", random_state = 42):
+    porcentajes = np.linspace(0.1, 1.0, 10)
+    rmse_train = []
+    rmse_val = []
+    for porcentaje in porcentajes:
+        #Calculamos cuantas muestras corresponden a este porcentaje:
+        cant_muestras = int(len(X_train) * porcentaje)
+        indices = np.random.choice(len(X_train), size = cant_muestras, replace = False)
+        X_sub = X_train[indices]
+        y_sub = y_train[indices]
+        #Creamos y entrenamos el modelo de XGBoost para regresion:
+        modelo = XGBRegressor(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, random_state = random_state)
+        modelo.fit(X_sub, y_sub)
+        #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
+        pred_train = modelo.predict(X_sub)
+        #Y predecimos sobre el conjunto de validacion (para ver el error de val):
+        pred_val = modelo.predict(X_val)
+        #Calculamos ambos errores:
+        rmse_train.append(np.sqrt(mean_squared_error(y_sub, pred_train)))
+        rmse_val.append(np.sqrt(mean_squared_error(y_val, pred_val)))
+
+    #Ahora graficamos las curvas:
+    plt.figure(figsize = (6,6))
+    plt.plot(porcentajes, rmse_train, label = "Train")
+    plt.plot(porcentajes, rmse_val,label = "Validation")
+    plt.xlabel("Porcentaje del dataset de entrenamiento")
+    plt.ylabel("RMSE")
+    plt.title("Learning Curve - XGBoost para Regresion", fontweight = "bold")
+    plt.legend()
+    plt.grid(True, linestyle = '--', alpha = 0.7)
+    plt.show()
+    
+def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, learning_rate = 0.05, subsample = 0.8, colsample_bytree = 0.8, objective = "multi:softmax", random_state = 42):
+    porcentajes = np.linspace(0.1, 1.0, 10)
+    f1_train = []
+    f1_val = []
+    for porcentaje in porcentajes:
+        #Calculamos cuantas muestras corresponden a este porcentaje:
+        cant_muestras = int(len(X_train) * porcentaje)
+        indices = np.random.choice(len(X_train), size = cant_muestras, replace = False)
+        X_sub = X_train[indices]
+        y_sub = y_train[indices]
+        #Creamos y entrenamos el modelo de XGBoost para regresion:
+        modelo = XGBRegressor(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, num_class = len(np.unique(y_train)), random_state = random_state)
+        modelo.fit(X_sub, y_sub)
+        #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
+        pred_train = modelo.predict(X_sub)
+        #Y predecimos sobre el conjunto de validacion (para ver el error de val):
+        pred_val = modelo.predict(X_val)
+        #Calculamos ambos errores:
+        f1_train.append(f1_score(y_sub, pred_train, average = "macro"))
+        f1_val.append(f1_score(y_val, pred_val, average = "macro"))
+
+    #Ahora graficamos las curvas:
+    plt.figure(figsize = (6,6))
+    plt.plot(porcentajes, f1_train, label = "Train")
+    plt.plot(porcentajes, f1_val,label = "Validation")
+    plt.xlabel("Porcentaje del dataset de entrenamiento")
+    plt.ylabel("F1 Score Macro")
+    plt.title("Learning Curve - XGBoost para Clasificacion", fontweight = "bold")
     plt.legend()
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
