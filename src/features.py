@@ -28,6 +28,13 @@ def one_hot_language(df):
     df = df.join(encoded_df)
     return df
 
+def one_hot_format(df): #TODO: sacar, deberia ser con un multi binarizer
+    encoder_format = OneHotEncoder(sparse_output=False)
+    encoded_format = encoder_format.fit_transform(df[["format_group"]])
+    encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out(["format_group"]), index = df.index)
+    df = df.join(encoded_df)
+    return df
+
 def multi_binarizer_genre(df):
     #misma logica que one hot pero permite varias features en 1
     mlb = MultiLabelBinarizer()
