@@ -313,13 +313,22 @@ def plot_comparacion_metricas(metricas_dict, title):
     plt.tight_layout()
     plt.show()
 
-def plot_feature_importance_regression(coeficientes):
+def plot_feature_importance_regression(coeficientes, modelo_regresor):
     top = coeficientes.head(20)
     plt.figure(figsize = (6, 6))
     plt.barh(top["feature"], top["abs_coef"])
     plt.xlabel("|Coeficiente|")
     plt.ylabel("Feature")
-    plt.title("Feature Importance - Regresion Lineal", fontweight = "bold")
+    plt.title(f"Feature Importance - Regresion {modelo_regresor}", fontweight = "bold")
     plt.gca().invert_yaxis()
     plt.show()
 
+def plot_feature_importance_xgb(importancias, modelo_xgb):
+    top = importancias.head(20)
+    plt.figure(figsize = (6, 6))
+    plt.barh(top["feature"], top["importance"])
+    plt.xlabel("Importance")
+    plt.ylabel("Feature")
+    plt.title(f"Feature Importance - XGBoost {modelo_xgb}", fontweight = "bold")
+    plt.gca().invert_yaxis()
+    plt.show()
