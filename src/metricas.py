@@ -10,9 +10,9 @@ def evaluar_metricas_regresion(y_pred, y):
 
 def evaluar_metricas_clasificacion(y_pred, y):
     accuracy = accuracy_score(y, y_pred)
-    precision = precision_score(y, y_pred, average = "macro")
-    recall = recall_score(y, y_pred, average = "macro")
-    f1 = f1_score(y, y_pred, average = "macro")
+    precision = precision_score(y, y_pred, average = "macro", zero_division = 0)
+    recall = recall_score(y, y_pred, average = "macro", zero_division = 0)
+    f1 = f1_score(y, y_pred, average = "macro", zero_division = 0)
     return accuracy, precision, recall, f1
 
 def tabla_metricas(metricas_train, metricas_val, nombres_metricas):

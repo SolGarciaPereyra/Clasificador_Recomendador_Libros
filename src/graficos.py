@@ -137,19 +137,20 @@ def plot_correlacion_features(corr_rating):
     plt.tight_layout()
     plt.show()
 
-def plot_confusion_matrix(cm_train, cm_val):
+def plot_confusion_matrix(cm_train, cm_val, title = "Matriz de confusion"):
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    sns.heatmap(cm_train, annot=True, fmt="d", ax=axes[0])
+    sns.heatmap(cm_train, annot=True, fmt="d", cmap = "Blues", ax=axes[0])
     axes[0].set_title("Train", fontweight = "bold")
     axes[0].set_xlabel("Predicción")
     axes[0].set_ylabel("Real")
 
-    sns.heatmap(cm_val, annot=True, fmt="d", ax=axes[1])
+    sns.heatmap(cm_val, annot=True, fmt="d", cmap = "Oranges", ax=axes[1])
     axes[1].set_title("Validation", fontweight = "bold")
     axes[1].set_xlabel("Predicción")
     axes[1].set_ylabel("Real")
 
+    plt.suptitle(title, fontweight="bold")
     plt.tight_layout()
     plt.show()
 
@@ -163,15 +164,18 @@ def plot_boxplot_rating_por_cant_generos(df_us_en_1_filtro):
     plt.show()
 
 def plot_learning_curves_linear_regression(X_train_scaled, y_train_regresion, X_val_scaled, y_val_regresion):
+    #Reordenamos los indices de X_train (de manera random), de esta manera, cada subconjunto de datos va a contener al anterior
+    np.random.seed(42)
+    indices = np.random.permutation(len(X_train_scaled)) 
+    #Elegimos el porcentaje de datos sobre los que vamos a evaluar la regresion
     porcentajes = np.linspace(0.1, 1.0, 10)
     rmse_train = []
     rmse_val = []
     for porcentaje in porcentajes:
         #Calculamos cuantas muestras corresponden a este porcentaje:
         cant_muestras = int(len(X_train_scaled) * porcentaje)
-        indices = np.random.choice(len(X_train_scaled), size = cant_muestras, replace = False)
-        X_sub = X_train_scaled[indices]
-        y_sub = y_train_regresion[indices]
+        X_sub = X_train_scaled[indices[:cant_muestras]]
+        y_sub = y_train_regresion[indices[:cant_muestras]]
         #Creamos y entrenamos el modelo de Regresion Lineal:
         modelo = LinearRegression()
         modelo.fit(X_sub, y_sub)
@@ -195,15 +199,18 @@ def plot_learning_curves_linear_regression(X_train_scaled, y_train_regresion, X_
     plt.show()
 
 def plot_learning_curves_logistic_regression(X_train_scaled, y_train_clasificacion, X_val_scaled, y_val_clasificacion, tecnica_rebalanceo, modelo_class_weight = None):
+    #Reordenamos los indices de X_train (de manera random), de esta manera, cada subconjunto de datos va a contener al anterior
+    np.random.seed(42)
+    indices = np.random.permutation(len(X_train_scaled)) 
+    #Elegimos el porcentaje de datos sobre los que vamos a evaluar la regresion
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
     for porcentaje in porcentajes:
         #Calculamos cuantas muestras corresponden a este porcentaje:
         cant_muestras = int(len(X_train_scaled) * porcentaje)
-        indices = np.random.choice(len(X_train_scaled), size = cant_muestras, replace = False)
-        X_sub = X_train_scaled[indices]
-        y_sub = y_train_clasificacion[indices]
+        X_sub = X_train_scaled[indices[:cant_muestras]]
+        y_sub = y_train_clasificacion[indices[:cant_muestras]]
         #Creamos y entrenamos el modelo de Regresion Logistica:
         modelo_actual = LogisticRegression(max_iter = 1000, class_weight = modelo_class_weight)
         modelo_actual.fit(X_sub, y_sub)
@@ -288,4 +295,20 @@ def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, 
     plt.title("Learning Curve - XGBoost para Clasificacion", fontweight = "bold")
     plt.legend()
     plt.grid(True, linestyle = '--', alpha = 0.7)
+    plt.show()
+
+def plot_comparacion_metricas(metricas_dict, title):
+    """metricas_dict = {"Sin rebalanceo": (acc, prec, rec, f1), "Balanced": (acc, prec, rec, f1)...}"""
+
+    nombres_metricas = ["Accuracy", "Precision", "Recall", "F1"]
+    df = pd.DataFrame(metricas_dict, index = nombres_metricas)
+    df.T.plot(kind="bar", figsize=(10, 5))
+
+    plt.title(title, fontweight="bold")
+    plt.ylabel("Score")
+    plt.ylim(0, 1)
+    plt.xticks(rotation=45, ha="right")
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
+    plt.legend(title="Métrica")
+    plt.tight_layout()
     plt.show()
