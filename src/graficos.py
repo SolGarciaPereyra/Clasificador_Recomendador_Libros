@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, f1_score
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from xgboost import XGBRegressor
 
 
@@ -297,6 +298,72 @@ def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, 
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
 
+
+def plot_learning_curves_randomforest_regression(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, random_state = 42):
+    porcentajes = np.linspace(0.1, 1.0, 10)
+    rmse_train = []
+    rmse_val = []
+    for porcentaje in porcentajes:
+        #Calculamos cuantas muestras corresponden a este porcentaje:
+        cant_muestras = int(len(X_train) * porcentaje)
+        indices = np.random.choice(len(X_train), size = cant_muestras, replace = False)
+        X_sub = X_train[indices]
+        y_sub = y_train[indices]
+        #Creamos y entrenamos el modelo de Random Forest para regresion:
+        modelo = RandomForestRegressor(n_estimators = n_estimators, max_depth = max_depth, random_state = random_state)
+        modelo.fit(X_sub, y_sub)
+        #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
+        pred_train = modelo.predict(X_sub)
+        #Y predecimos sobre el conjunto de validacion (para ver el error de val):
+        pred_val = modelo.predict(X_val)
+        #Calculamos ambos errores:
+        rmse_train.append(np.sqrt(mean_squared_error(y_sub, pred_train)))
+        rmse_val.append(np.sqrt(mean_squared_error(y_val, pred_val)))
+
+    #Ahora graficamos las curvas:
+    plt.figure(figsize = (6,6))
+    plt.plot(porcentajes, rmse_train, label = "Train")
+    plt.plot(porcentajes, rmse_val,label = "Validation")
+    plt.xlabel("Porcentaje del dataset de entrenamiento")
+    plt.ylabel("RMSE")
+    plt.title("Learning Curve - Random Forest para Regresion", fontweight = "bold")
+    plt.legend()
+    plt.grid(True, linestyle = '--', alpha = 0.7)
+    plt.show()
+
+
+def plot_learning_curves_randomforest_classification(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, random_state = 42):
+    porcentajes = np.linspace(0.1, 1.0, 10)
+    f1_train = []
+    f1_val = []
+    for porcentaje in porcentajes:
+        #Calculamos cuantas muestras corresponden a este porcentaje:
+        cant_muestras = int(len(X_train) * porcentaje)
+        indices = np.random.choice(len(X_train), size = cant_muestras, replace = False)
+        X_sub = X_train[indices]
+        y_sub = y_train[indices]
+        #Creamos y entrenamos el modelo de Random Forest para regresion:
+        modelo = RandomForestClassifier(n_estimators = n_estimators, max_depth = max_depth, random_state = random_state)
+        modelo.fit(X_sub, y_sub)
+        #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
+        pred_train = modelo.predict(X_sub)
+        #Y predecimos sobre el conjunto de validacion (para ver el error de val):
+        pred_val = modelo.predict(X_val)
+        #Calculamos ambos errores:
+        f1_train.append(f1_score(y_sub, pred_train, average = "macro"))
+        f1_val.append(f1_score(y_val, pred_val, average = "macro"))
+
+    #Ahora graficamos las curvas:
+    plt.figure(figsize = (6,6))
+    plt.plot(porcentajes, f1_train, label = "Train")
+    plt.plot(porcentajes, f1_val,label = "Validation")
+    plt.xlabel("Porcentaje del dataset de entrenamiento")
+    plt.ylabel("F1 Score Macro")
+    plt.title("Learning Curve - Random Forest para Clasificacion", fontweight = "bold")
+    plt.legend()
+    plt.grid(True, linestyle = '--', alpha = 0.7)
+    plt.show()
+
 def plot_comparacion_metricas(metricas_dict, title):
     """metricas_dict = {"Sin rebalanceo": (acc, prec, rec, f1), "Balanced": (acc, prec, rec, f1)...}"""
 
@@ -330,5 +397,15 @@ def plot_feature_importance_xgb(importancias, modelo_xgb):
     plt.xlabel("Importance")
     plt.ylabel("Feature")
     plt.title(f"Feature Importance - XGBoost {modelo_xgb}", fontweight = "bold")
+    plt.gca().invert_yaxis()
+    plt.show()
+
+def plot_feature_importance_rf(importancias, modelo_rf):
+    top = importancias.head(20)
+    plt.figure(figsize = (6, 6))
+    plt.barh(top["feature"], top["importance"])
+    plt.xlabel("Importance")
+    plt.ylabel("Feature")
+    plt.title(f"Feature Importance - Random Forest {modelo_rf}", fontweight = "bold")
     plt.gca().invert_yaxis()
     plt.show()
