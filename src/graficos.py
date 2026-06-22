@@ -123,7 +123,7 @@ def plot_scatte_rating_por_publication_year(df_us_en):
 
 def plot_boxplot_rating_por_autor_frecuent(df_top, titulo):
     plt.figure(figsize = (10, 6))
-    sns.boxplot(data = df_top, x = "author_id", y = "average_rating")
+    sns.boxplot(data = df_top, x = "author_id_principal", y = "average_rating")
     plt.ylim(0, 5)
     plt.xlabel("Autor")
     plt.ylabel("Average rating")
