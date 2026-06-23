@@ -189,6 +189,20 @@ def extraer_generos_libro(shelves):
         top6.append(genero)
     return top6
 
+def primer_tiene_role_vacio(authors_list):
+    return authors_list[0]["role"] == ""
+
+def extraer_autor_principal(autores_sin_preprocesar):
+    """
+    autores_sin preprocesar: [{authorId, role}, {authorid, role})]
+    Asumimos que el primer elemento de la lista es el autor principal (orden tipico de Goodreads)
+    """
+    # Buscar el primero con role vacío; si no hay, usar el primero de la lista
+    for dic_autores in autores_sin_preprocesar:
+        if dic_autores["role"] == "":
+            return dic_autores["author_id"]
+    return autores_sin_preprocesar[0]["author_id"]
+
 def detectar_language_code(fila):
     try:
         descripcion = str(fila["description"]).strip()
