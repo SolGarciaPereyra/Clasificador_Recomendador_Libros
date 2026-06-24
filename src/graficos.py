@@ -409,3 +409,14 @@ def plot_feature_importance_rf(importancias, modelo_rf):
     plt.title(f"Feature Importance - Random Forest {modelo_rf}", fontweight = "bold")
     plt.gca().invert_yaxis()
     plt.show()
+
+def plot_losses(train_losses, val_losses, name_model):
+    plt.figure(figsize=(7, 4))
+    plt.plot(train_losses, label="Train Cross-Entropy")
+    plt.plot(val_losses, label="Val Cross-Entropy")
+    plt.xlabel("Época")
+    plt.ylabel("Cross-Entropy")
+    plt.title(f"Evolución de la función de costo — Modelo {name_model}")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()

@@ -1,6 +1,15 @@
 import pandas as pd
 import numpy as np
+from src.modelos import MLP_regresion
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
 from src.features import limpiar_features_no_necesarias
+from src.metricas import evaluate_metrics_pytorch_clasificacion, evaluate_metrics_pytorch_regresion
+from src.graficos import plot_losses, plot_confusion_matrix
 
 def df_target_to_numpy(target, dfs):
     #target puede ser "average_rating" para regresion, o "estrellas" para clasificacion
@@ -46,3 +55,59 @@ def fusionar_libros(grupo):
     libro_fusionado = pd.Series({"title": fila_base["title"], "authors": fila_base["authors"], "publisher": fila_base["publisher"], "publication_year": grupo["publication_year"].min(), "num_pages": fila_base["num_pages"], "language_code": fila_base["language_code"], "average_rating": average_rating,
                             "ratings_count": ratings_count_total, "genres": generos, "format_group": formatos, "description": descripcion, "title_text": fila_base["title"], "is_series": grupo["is_series"].any()})
     return libro_fusionado
+
+
+def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = torch.long):
+    """Transforms numpy array into tensor"""
+    X_tr = torch.tensor(X_train, dtype=torch.float32)
+    y_tr = torch.tensor(y_train, dtype=y_dtype)
+    X_vl = torch.tensor(X_val, dtype=torch.float32)
+    y_vl = torch.tensor(y_val, dtype=y_dtype)
+
+    train_ds = TensorDataset(X_tr, y_tr)
+    val_ds = TensorDataset(X_vl, y_vl)
+
+    batch_size = max(1, len(X_train) // n_batches)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader
+
+def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+    #rebalanceo:
+    counts = np.bincount(y_train)
+    weights = counts.sum() / counts
+    weights = weights / weights.mean()
+    class_weights = torch.tensor(np.sqrt(weights), dtype=torch.float32, device=device)
+    
+    loss_fn = nn.CrossEntropyLoss(weight=class_weights)
+    #loss_fn = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+
+    train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches = 64)
+    train_losses, val_losses = model.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs, waiting = 5)
+
+    y_pred_train = model.predict(X_train, device)
+    y_pred_val = model.predict(X_val, device)
+    train_metrics, val_metrics = evaluate_metrics_pytorch_clasificacion(y_pred_train, y_train, y_pred_val, y_val)
+
+    cm_train = confusion_matrix(y_train, y_pred_train)
+    cm_val = confusion_matrix(y_val, y_pred_val)
+    plot_confusion_matrix(cm_train, cm_val)
+    plot_losses(train_losses, val_losses, f"{model_name} - pytorch")
+
+    return train_metrics, val_metrics
+
+def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+    loss_fn = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+
+    train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches = 64, y_dtype = torch.float32)
+    train_losses, val_losses = model.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs = epochs, waiting = 5)
+
+    y_pred_train = model.predict(X_train, device)
+    y_pred_val = model.predict(X_val, device)
+    train_metrics, val_metrics = evaluate_metrics_pytorch_regresion(y_pred_train, y_train, y_pred_val, y_val)
+
+    plot_losses(train_losses, val_losses, f"{model_name} - pytorch")
+    return train_metrics, val_metrics
