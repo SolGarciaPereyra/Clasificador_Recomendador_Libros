@@ -17,8 +17,8 @@ class MLP_regresion(nn.Module):
             layers.append(nn.Linear(layer_sizes[i], layer_sizes[i + 1]))
             if i < len(layer_sizes) - 2:
                 layers.append(activation())
-            if dropout > 0:
-                layers.append(nn.Dropout(p=dropout))
+                if dropout > 0:
+                    layers.append(nn.Dropout(p=dropout))
 
         self.mlp_stack = nn.Sequential(*layers)
         self.init_weights()
@@ -71,7 +71,7 @@ class MLP_regresion(nn.Module):
 
         best_val_loss = np.inf
         best_weights = None
-        wait_count = 0
+        #wait_count = 0
 
         for epoch in pbar:
             train_loss = self.train_loop(train_loader, loss_fn, optimizer, device)
@@ -80,16 +80,16 @@ class MLP_regresion(nn.Module):
             train_losses.append(train_loss)
             val_losses.append(val_loss)
 
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_weights = copy.deepcopy(self.state_dict())
-                wait_count = 0
-            else:
-                wait_count += 1
-                if wait_count >= waiting:
-                    self.load_state_dict(best_weights)
-                    pbar.set_postfix_str(f"early stopping -> epoca {epoch - waiting}")
-                    break
+            #if val_loss < best_val_loss:
+            #    best_val_loss = val_loss
+            #    best_weights = copy.deepcopy(self.state_dict())
+            #    wait_count = 0
+            #else:
+            #    wait_count += 1
+            #    if wait_count >= waiting:
+            #        self.load_state_dict(best_weights)
+            #        pbar.set_postfix_str(f"early stopping -> epoca {epoch - waiting}")
+            #        break
 
             pbar.set_postfix({"epoch": f"{epoch}"})
         return train_losses, val_losses
@@ -163,7 +163,7 @@ class MLP_clasificacion(nn.Module):
 
         best_val_loss = np.inf
         best_weights = None
-        wait_count = 0
+        #wait_count = 0
 
         for epoch in pbar:
             train_loss = self.train_loop(train_loader, loss_fn, optimizer, device)
@@ -173,16 +173,16 @@ class MLP_clasificacion(nn.Module):
             val_losses.append(val_loss)
 
             #early stopping:
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_weights = copy.deepcopy(self.state_dict())
-                wait_count = 0
-            else:
-                wait_count += 1
-                if wait_count >= waiting:
-                    self.load_state_dict(best_weights)
-                    pbar.set_postfix_str(f"early stopping -> epoca {epoch - waiting}")
-                    break
+            #if val_loss < best_val_loss:
+            #    best_val_loss = val_loss
+            #    best_weights = copy.deepcopy(self.state_dict())
+            #    wait_count = 0
+            #else:
+            #    wait_count += 1
+            #    if wait_count >= waiting:
+            #        self.load_state_dict(best_weights)
+            #        pbar.set_postfix_str(f"early stopping -> epoca {epoch - waiting}")
+            #        break
 
             pbar.set_postfix({"epoch":  f"{epoch}"})
         return train_losses, val_losses

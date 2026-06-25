@@ -410,6 +410,15 @@ def plot_feature_importance_rf(importancias, modelo_rf):
     plt.gca().invert_yaxis()
     plt.show()
 
+def plot_feature_importance_pytorch(df_importance, top_n=20, title="Feature Importance"):
+    df_plot = df_importance.head(top_n).iloc[::-1]  # invierto para que la más importante quede arriba
+    plt.figure(figsize=(8, max(4, 0.3 * len(df_plot))))
+    plt.barh(df_plot["feature"], df_plot["importance"])
+    plt.xlabel("Aumento del error al permutar" )
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
 def plot_losses(train_losses, val_losses, name_model):
     plt.figure(figsize=(7, 4))
     plt.plot(train_losses, label="Train Cross-Entropy")

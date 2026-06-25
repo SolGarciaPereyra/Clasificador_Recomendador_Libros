@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, mean_squared_error
 
 from src.features import limpiar_features_no_necesarias
-from src.metricas import evaluate_metrics_pytorch_clasificacion, evaluate_metrics_pytorch_regresion
+from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion
 from src.graficos import plot_losses, plot_confusion_matrix
 
 def df_target_to_numpy(target, dfs):
@@ -89,7 +89,8 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
 
     y_pred_train = model.predict(X_train, device)
     y_pred_val = model.predict(X_val, device)
-    train_metrics, val_metrics = evaluate_metrics_pytorch_clasificacion(y_pred_train, y_train, y_pred_val, y_val)
+    train_metrics = evaluar_metricas_clasificacion(y_pred_train, y_train)
+    val_metrics = evaluar_metricas_clasificacion(y_pred_val, y_val)
 
     cm_train = confusion_matrix(y_train, y_pred_train)
     cm_val = confusion_matrix(y_val, y_pred_val)
@@ -107,7 +108,35 @@ def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val,
 
     y_pred_train = model.predict(X_train, device)
     y_pred_val = model.predict(X_val, device)
-    train_metrics, val_metrics = evaluate_metrics_pytorch_regresion(y_pred_train, y_train, y_pred_val, y_val)
+    train_metrics = evaluar_metricas_regresion(y_pred_train, y_train)
+    val_metrics = evaluar_metricas_regresion(y_pred_val, y_val)
 
     plot_losses(train_losses, val_losses, f"{model_name} - pytorch")
     return train_metrics, val_metrics
+
+def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn = mean_squared_error, higher_is_better=False, n_repeats=5, random_state=42):
+    generador_numeros_aleatorios = np.random.default_rng(random_state)
+
+    #defino el baseline para ver si al permutar la columna (para descorrelacionar sus valores con la prediccion) afecta
+    y_pred_base = model.predict(X, device)
+    baseline_score = metric_fn(y, y_pred_base)
+
+    means = []
+    for col in range(X.shape[1]):
+        original_col = X[:, col].copy() #copio la columna original
+        scores = []
+        for _ in range(n_repeats): #repito para estabilidad
+            generador_numeros_aleatorios.shuffle(X[:, col])  #mezlco la columna
+            y_pred_perm = model.predict(X, device)
+            scores.append(metric_fn(y, y_pred_perm))
+        X[:, col] = original_col  #restauro la columna a su estado original
+        means.append(np.mean(scores))
+
+    means = np.array(means)
+    if higher_is_better: #para clasificacion queremos maximizar las metricas pero para regresion queremos minimizar
+        importances = baseline_score - means
+    else:
+        importances = means - baseline_score
+
+    df_importance = pd.DataFrame({"feature": feature_names, "importance": importances}).sort_values("importance", ascending=False).reset_index(drop=True)
+    return df_importance
