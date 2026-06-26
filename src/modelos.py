@@ -94,7 +94,6 @@ class MLP_regresion(nn.Module):
             pbar.set_postfix({"epoch": f"{epoch}"})
         return train_losses, val_losses
 
-
 class MLP_clasificacion(nn.Module):
     def __init__(self, input_size, hidden_layers=[128, 64], n_classes=6, activation = nn.ReLU, dropout = 0):
         super().__init__()

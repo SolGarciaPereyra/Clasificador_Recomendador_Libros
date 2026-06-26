@@ -6,6 +6,22 @@ goodreads_us_english_sinNaN.json
 goodreads_us_english.json
 goodreads_us_english_primer_filtrado.json
 copia_goodreads_us_english_primer_filtrado copy.json
+set_test_1.json
+set_train_1.json
+set_val_1.json
+checkpoint_fusion2.pkl
+checkpoint_fusion3.pkl
+checkpoint_fusion4.pkl
+checkpoint_fusion6.pkl
+checkpoint_fusion7.pkl
+checkpoint_fusion8.pkl
+checkpoint_fusion9.pkl
+checkpoint_fusion11.pkl
+checkpoint_fusion12.pkl
+checkpoint_fusion14.pkl
+checkpoint_train.pkl
+checkpoint_val.pkl
+checkpoint_test.pkl
 
 *.aux
 *.log
