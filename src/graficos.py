@@ -266,7 +266,7 @@ def plot_learning_curves_xgboost_regression(X_train, y_train, X_val, y_val, n_es
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
     
-def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, learning_rate = 0.05, subsample = 0.8, colsample_bytree = 0.8, objective = "multi:softmax", random_state = 42):
+def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, pesos = None, n_estimators = 300, max_depth = 4, learning_rate = 0.05, subsample = 0.8, colsample_bytree = 0.8, objective = "multi:softmax", random_state = 42):
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
@@ -278,7 +278,8 @@ def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, 
         y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de XGBoost para regresion:
         modelo = XGBClassifier(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, num_class = len(np.unique(y_train)), random_state = random_state)
-        modelo.fit(X_sub, y_sub)
+        pesos_sub = pesos[indices]
+        modelo.fit(X_sub, y_sub, sample_weight = pesos_sub)
         #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
         pred_train = modelo.predict(X_sub)
         #Y predecimos sobre el conjunto de validacion (para ver el error de val):
@@ -288,7 +289,7 @@ def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, 
         f1_val.append(f1_score(y_val, pred_val, average = "macro"))
 
     #Ahora graficamos las curvas:
-    plt.figure(figsize = (6,6))
+    plt.figure(figsize = (6, 6))
     plt.plot(porcentajes, f1_train, label = "Train")
     plt.plot(porcentajes, f1_val,label = "Validation")
     plt.xlabel("Porcentaje del dataset de entrenamiento")
@@ -332,7 +333,7 @@ def plot_learning_curves_randomforest_regression(X_train, y_train, X_val, y_val,
     plt.show()
 
 
-def plot_learning_curves_randomforest_classification(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, min_samples_split = 2, min_samples_leaf = 1, max_features = "sqrt", random_state = 42):
+def plot_learning_curves_randomforest_classification(X_train, y_train, X_val, y_val, pesos = None, n_estimators = 300, max_depth = 4, min_samples_split = 2, min_samples_leaf = 1, max_features = "sqrt", random_state = 42):
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
@@ -343,7 +344,7 @@ def plot_learning_curves_randomforest_classification(X_train, y_train, X_val, y_
         X_sub = X_train[indices]
         y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de Random Forest para regresion:
-        modelo = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, max_features=max_features, random_state=random_state)        
+        modelo = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, max_features=max_features, random_state=random_state, class_weight = pesos)       
         modelo.fit(X_sub, y_sub)
         #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
         pred_train = modelo.predict(X_sub)

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, mean_squared_error, f1_score
+from sklearn.metrics import confusion_matrix, mean_squared_error, f1_score, r2_score
 
 from src.features import limpiar_features_no_necesarias
 from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion
@@ -73,7 +73,7 @@ def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = tor
 
     return train_loader, val_loader
 
-def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100):
     #rebalanceo:
     counts = np.bincount(y_train)
     weights = counts.sum() / counts
@@ -82,7 +82,7 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
     #loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
     train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches = 64)
     train_losses, val_losses = model.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs, waiting = 5)
@@ -99,14 +99,14 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
 
     return train_metrics, val_metrics
 
-def run_grid_search_pytorch_clasificacion(modelo, params, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
     counts = np.bincount(y_train)
     weights = np.sqrt(counts.sum() / counts)
     weights = weights / weights.mean()
     class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
-    optimizer = torch.optim.Adam(modelo.parameters(), lr=params["lr"])
+    optimizer = torch.optim.Adam(modelo.parameters(), lr=learning_rate)
     
     train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64)
     modelo.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs)
@@ -115,9 +115,9 @@ def run_grid_search_pytorch_clasificacion(modelo, params, model_name, X_train, y
     f1_val = f1_score(y_val, y_pred_val, average="macro")
     return f1_val
 
-def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100):
     loss_fn = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
     train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches = 64, y_dtype = torch.float32)
     train_losses, val_losses = model.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs = epochs, waiting = 5)
@@ -130,7 +130,16 @@ def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val,
     plot_losses(train_losses, val_losses, f"{model_name} - pytorch")
     return train_metrics, val_metrics
 
-
+def run_grid_search_pytorch_regresion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+    loss_fn = nn.MSELoss()
+    optimizer = torch.optim.Adam(modelo.parameters(), lr=learning_rate)
+    
+    train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype=torch.float32)
+    modelo.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs)
+    
+    y_pred_val = modelo.predict(X_val, device)
+    r2_val = r2_score(y_val, y_pred_val)
+    return r2_val
 
 def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn = mean_squared_error, higher_is_better=False, n_repeats=5, random_state=42):
     generador_numeros_aleatorios = np.random.default_rng(random_state)
