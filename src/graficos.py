@@ -138,15 +138,18 @@ def plot_correlacion_features(corr_rating):
     plt.tight_layout()
     plt.show()
 
-def plot_confusion_matrix(cm_train, cm_val, title = "Matriz de confusion"):
+def plot_confusion_matrix(cm_train, cm_val, labels = None, title = "Matriz de confusion"):
+    if (labels is None):
+        labels = list(range(cm_train.shape[0]))
+
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    sns.heatmap(cm_train, annot=True, fmt="d", cmap = "Blues", ax=axes[0])
+    sns.heatmap(cm_train, annot=True, fmt="d", cmap = "Blues", ax=axes[0], xticklabels = labels, yticklabels = labels)
     axes[0].set_title("Train", fontweight = "bold")
     axes[0].set_xlabel("Predicción")
     axes[0].set_ylabel("Real")
 
-    sns.heatmap(cm_val, annot=True, fmt="d", cmap = "Oranges", ax=axes[1])
+    sns.heatmap(cm_val, annot=True, fmt="d", cmap = "Oranges", ax=axes[1], xticklabels = labels, yticklabels = labels)
     axes[1].set_title("Validation", fontweight = "bold")
     axes[1].set_xlabel("Predicción")
     axes[1].set_ylabel("Real")
@@ -299,7 +302,6 @@ def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, 
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
 
-
 def plot_learning_curves_randomforest_regression(X_train, y_train, X_val, y_val, n_estimators = 300, max_depth = 4, min_samples_split = 2, min_samples_leaf = 1, max_features = "sqrt", random_state = 42):
     porcentajes = np.linspace(0.1, 1.0, 10)
     rmse_train = []
@@ -331,7 +333,6 @@ def plot_learning_curves_randomforest_regression(X_train, y_train, X_val, y_val,
     plt.legend()
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
-
 
 def plot_learning_curves_randomforest_classification(X_train, y_train, X_val, y_val, pesos = None, n_estimators = 300, max_depth = 4, min_samples_split = 2, min_samples_leaf = 1, max_features = "sqrt", random_state = 42):
     porcentajes = np.linspace(0.1, 1.0, 10)

@@ -6,6 +6,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, mean_squared_error, f1_score, r2_score
+from imblearn.under_sampling import RandomUnderSampler
+from itertools import product
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 
 from src.features import limpiar_features_no_necesarias
 from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion
@@ -56,6 +60,40 @@ def fusionar_libros(grupo):
                             "ratings_count": ratings_count_total, "genres": generos, "format_group": formatos, "description": descripcion, "title_text": fila_base["title"], "is_series": grupo["is_series"].any()})
     return libro_fusionado
 
+def mini_grid_search_logistica(X_train_scaled, y_train_clasificacion, X_val_scaled, y_val_clasificacion, pesos_clase_1, pesos_clase_2, peso_clase_3, peso_clase_4, pesos_clase_5):
+    resultados = []
+
+    for peso_1, peso_2, peso_5 in product(pesos_clase_1, pesos_clase_2, pesos_clase_5):
+        pesos = {1: peso_1, 2: peso_2, 3: peso_clase_3, 4: peso_clase_4, 5: peso_5}
+        modelo = LogisticRegression(max_iter = 1000, class_weight = pesos)
+        modelo.fit(X_train_scaled, y_train_clasificacion)
+        y_pred_val = modelo.predict(X_val_scaled)
+        accuracy, precision, recall, f1 = evaluar_metricas_clasificacion(y_pred_val, y_val_clasificacion)
+        resultados.append({"peso_1": peso_1, "peso_2": peso_2, "peso_5": peso_5, "accuracy": accuracy, 
+                           "precision": precision, "recall": recall, "f1": f1})
+        
+    return resultados
+
+def mini_grid_search_logistica_undersampling(X_train, y_train_clasificacion, X_val, y_val_clasificacion, cantidades_clase_4, pesos_clase_1, pesos_clase_2, peso_clase_3, peso_clase_4, pesos_clase_5):
+    resultados = []
+
+    for cantidad in cantidades_clase_4:
+        undersampling = RandomUnderSampler(sampling_strategy={4: cantidad}, random_state=42)
+        X_res, y_res = undersampling.fit_resample(X_train, y_train_clasificacion)
+        scaler = StandardScaler()
+        X_res_scaled = scaler.fit_transform(X_res)
+        X_val_scaled = scaler.transform(X_val)
+
+        for peso_1, peso_2, peso_5 in product(pesos_clase_1, pesos_clase_2, pesos_clase_5):
+            pesos = {1: peso_1, 2: peso_2, 3: peso_clase_3, 4: peso_clase_4, 5: peso_5}
+            modelo = LogisticRegression(max_iter = 1000, class_weight=pesos)
+            modelo.fit(X_res_scaled, y_res)
+            pred = modelo.predict(X_val_scaled)
+            accuracy, precision, recall, f1 = evaluar_metricas_clasificacion(pred, y_val_clasificacion)
+            resultados.append({"cantidad": cantidad, "peso_1": peso_1, "peso_2": peso_2, "peso_5": peso_5,
+                "accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1})
+
+    return resultados
 
 def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = torch.long):
     """Transforms numpy array into tensor"""
