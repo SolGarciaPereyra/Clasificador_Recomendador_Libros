@@ -138,6 +138,9 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
     return train_metrics, val_metrics
 
 def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+    y_train = y_train.astype(np.int64)
+    y_val = y_val.astype(np.int64)
+
     counts = np.bincount(y_train)
     weights = np.sqrt(counts.sum() / counts)
     weights = weights / weights.mean()

@@ -8,12 +8,26 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from xgboost import XGBRegressor, XGBClassifier
 
 
-def plot_rating(df): #
+def plot_rating(df): 
     plt.hist(df["average_rating"], bins=50, edgecolor="white")
     plt.xlabel("Rating Promedio")
     plt.ylabel("Cantidad de libros")
     plt.title("Distribución de ratings", fontweight = "bold")
     plt.show()
+
+def plot_ratings_subplots(df_train, df_val, df_test, normalize):
+    fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+    plot_ratings_subplot(df_train, axs[0], "Train", "tab:blue", normalize)
+    plot_ratings_subplot(df_val, axs[1], "Val", "tab:orange", normalize)
+    plot_ratings_subplot(df_test, axs[2], "Test", "tab:green", normalize)
+    plt.tight_layout()
+    plt.show()
+
+def plot_ratings_subplot(df, ax, titulo, color, normalize):
+    ax.hist(df["average_rating"], bins=50, edgecolor="white", color=color, density = normalize)
+    ax.set_xlabel("Rating promedio")
+    ax.set_ylabel("Cantidad de libros")
+    ax.set_title(titulo, fontweight="bold")
 
 def plot_boxplot_rating(df):
     ratings = df["average_rating"]
@@ -26,7 +40,7 @@ def plot_boxplot_rating(df):
     plt.tight_layout()
     plt.show()
 
-def plot_stars(df): #
+def plot_stars(df): 
     porcentajes = (df["estrellas"].value_counts(normalize = True).sort_index()*100)
     bars = plt.bar(porcentajes.index, porcentajes.values)
     
@@ -38,6 +52,26 @@ def plot_stars(df): #
         altura = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2, altura,f"{altura:.1f}%", ha="center", va="bottom")
     plt.show()
+
+def plot_stars_subplots(df_train, df_val, df_test):
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+    plot_stars_subplot(df_train, axs[0], "Train", "tab:blue")
+    plot_stars_subplot(df_val, axs[1], "Val", "tab:orange")
+    plot_stars_subplot(df_test, axs[2], "Test", "tab:green")
+    plt.tight_layout()
+    plt.show()
+
+def plot_stars_subplot(df, ax, titulo, color):
+    porcentajes = (df["estrellas"].value_counts(normalize = True).sort_index() * 100)
+
+    bars = ax.bar(porcentajes.index, porcentajes.values, color = color)
+    ax.set_xlabel("Estrellas")
+    ax.set_ylabel("% de libros")
+    ax.set_title(titulo, fontweight = "bold")
+
+    for bar in bars:
+        altura = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, altura, f"{altura:.1f}%", ha="center", va="bottom")
 
 def plot_generos_mas_frecuentes(contador_generos): #
     contador_ordenado = contador_generos.sort_values()
