@@ -15,13 +15,17 @@ checkpoint_fusion4.pkl
 checkpoint_fusion6.pkl
 checkpoint_fusion7.pkl
 checkpoint_fusion8.pkl
-checkpoint_fusion9.pkl
+1checkpoint_fusion9.pkl
+1checkpoint_fusion11.pkl
+1checkpoint_fusion12.pkl
+1checkpoint_fusion14.pkl
+1checkpoint_train.pkl
+1checkpoint_val.pkl
+1checkpoint_test.pkl
 checkpoint_fusion11.pkl
-checkpoint_fusion12.pkl
-checkpoint_fusion14.pkl
-checkpoint_train.pkl
-checkpoint_val.pkl
-checkpoint_test.pkl
+1set_test_1.json
+1set_train_1.json
+1set_val_1.json
 
 *.aux
 *.log
