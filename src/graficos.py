@@ -172,10 +172,7 @@ def plot_correlacion_features(corr_rating):
     plt.tight_layout()
     plt.show()
 
-def plot_confusion_matrix(cm_train, cm_val, labels = None, title = "Matriz de confusion"):
-    if (labels is None):
-        labels = list(range(cm_train.shape[0]))
-
+def plot_confusion_matrix(cm_train, cm_val, labels = [1, 2, 3, 4, 5], title = "Matriz de confusion"):
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     sns.heatmap(cm_train, annot=True, fmt="d", cmap = "Blues", ax=axes[0], xticklabels = labels, yticklabels = labels)
@@ -236,29 +233,40 @@ def plot_learning_curves_linear_regression(X_train_scaled, y_train_regresion, X_
     plt.grid(True, linestyle = '--', alpha = 0.7)
     plt.show()
 
-def plot_learning_curves_logistic_regression(X_train_scaled, y_train_clasificacion, X_val_scaled, y_val_clasificacion, tecnica_rebalanceo, modelo_class_weight = None):
-    #Reordenamos los indices de X_train (de manera random), de esta manera, cada subconjunto de datos va a contener al anterior
-    np.random.seed(42)
-    indices = np.random.permutation(len(X_train_scaled)) 
+def plot_learning_curves_logistic_regression(X_train, y_train, X_val, y_val, tecnica_rebalanceo, modelo_class_weight = None, random_state = 42):
     #Elegimos el porcentaje de datos sobre los que vamos a evaluar la regresion
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
+
+    np.random.seed(random_state)
+    indices_por_clase = {}
+    for clase in np.unique(y_train):
+        idx = np.where(y_train == clase)[0]
+        np.random.shuffle(idx)
+        indices_por_clase[clase] = idx
+
     for porcentaje in porcentajes:
         #Calculamos cuantas muestras corresponden a este porcentaje:
-        cant_muestras = int(len(X_train_scaled) * porcentaje)
-        X_sub = X_train_scaled[indices[:cant_muestras]]
-        y_sub = y_train_clasificacion[indices[:cant_muestras]]
+        indices = []
+        for clase, idx in indices_por_clase.items():
+            n = max(1, int(len(idx) * porcentaje))
+            indices.extend(idx[:n])
+        indices = np.array(indices)
+        np.random.shuffle(indices)
+        
+        X_sub = X_train[indices]
+        y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de Regresion Logistica:
         modelo_actual = LogisticRegression(max_iter = 1000, class_weight = modelo_class_weight)
         modelo_actual.fit(X_sub, y_sub)
         #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
         pred_train = modelo_actual.predict(X_sub)
         #Y predecimos sobre el conjunto de validacion (para ver el error de val):
-        pred_val = modelo_actual.predict(X_val_scaled)
+        pred_val = modelo_actual.predict(X_val)
         #Calculamos ambos errores:
         f1_train.append(f1_score(y_sub, pred_train, average = "macro"))
-        f1_val.append(f1_score(y_val_clasificacion, pred_val, average = "macro"))
+        f1_val.append(f1_score(y_val, pred_val, average = "macro"))
 
     #Ahora graficamos las curvas:
     plt.figure(figsize = (6, 6))
@@ -304,13 +312,32 @@ def plot_learning_curves_xgboost_regression(X_train, y_train, X_val, y_val, n_es
     plt.show()
     
 def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, pesos = None, n_estimators = 300, max_depth = 4, learning_rate = 0.05, subsample = 0.8, colsample_bytree = 0.8, objective = "multi:softmax", random_state = 42):
+    #tempora, xgboost solo acepta clases empezando por el 0
+    y_train = y_train - 1
+    y_val = y_val - 1
+    pesos = np.array([pesos[y] for y in y_train])
+
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
+
+    #esto me va a servir para que en cada subset q tomemos esten representadas todas las clases, pero que a la vez se mantengan los subconjuntos contenidos en el siguiente
+    np.random.seed(random_state)
+    indices_por_clase = {}
+    for clase in np.unique(y_train):
+        idx = np.where(y_train == clase)[0]
+        np.random.shuffle(idx)
+        indices_por_clase[clase] = idx
+
     for porcentaje in porcentajes:
         #Calculamos cuantas muestras corresponden a este porcentaje:
-        cant_muestras = int(len(X_train) * porcentaje)
-        indices = np.random.choice(len(X_train), size = cant_muestras, replace = False)
+        indices = []
+        for clase, idx in indices_por_clase.items():
+            n = max(1, int(len(idx) * porcentaje))
+            indices.extend(idx[:n])
+        indices = np.array(indices)
+        np.random.shuffle(indices)
+        
         X_sub = X_train[indices]
         y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de XGBoost para regresion:
@@ -372,10 +399,23 @@ def plot_learning_curves_randomforest_classification(X_train, y_train, X_val, y_
     porcentajes = np.linspace(0.1, 1.0, 10)
     f1_train = []
     f1_val = []
+
+    np.random.seed(random_state)
+    indices_por_clase = {}
+    for clase in np.unique(y_train):
+        idx = np.where(y_train == clase)[0]
+        np.random.shuffle(idx)
+        indices_por_clase[clase] = idx
+
     for porcentaje in porcentajes:
         #Calculamos cuantas muestras corresponden a este porcentaje:
-        cant_muestras = int(len(X_train) * porcentaje)
-        indices = np.random.choice(len(X_train), size = cant_muestras, replace = False)
+        indices = []
+        for clase, idx in indices_por_clase.items():
+            n = max(1, int(len(idx) * porcentaje))
+            indices.extend(idx[:n])
+        indices = np.array(indices)
+        np.random.shuffle(indices)
+        
         X_sub = X_train[indices]
         y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de Random Forest para regresion:

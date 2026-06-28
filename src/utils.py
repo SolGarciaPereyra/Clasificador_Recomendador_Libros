@@ -111,22 +111,32 @@ def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = tor
 
     return train_loader, val_loader
 
-def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100):
+def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100, pesos = None):
+    #temporalmente cambio las clases de 1-5 a 0-4 por la loss
+    y_train_temp = y_train.astype(np.int64) - 1
+    y_val_temp = y_val.astype(np.int64) - 1
+
     #rebalanceo:
-    counts = np.bincount(y_train)
-    weights = counts.sum() / counts
-    weights = weights / weights.mean()
+    if pesos is None:
+        counts = np.bincount(y_train_temp)
+        weights = counts.sum() / counts
+        weights = weights / weights.mean()
+    else:
+        #transformo de {1: , 2: , 3: , 4: , 5: } a lista
+        weights = [pesos[1], pesos[2], pesos[3], pesos[4], pesos[5]]
     class_weights = torch.tensor(np.sqrt(weights), dtype=torch.float32, device=device)
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
     #loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
-    train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches = 64)
+    #entreno con los valores de clase temporales
+    train_loader, val_loader = make_dataloaders(X_train, y_train_temp, X_val, y_val_temp, n_batches = 64)
     train_losses, val_losses = model.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs, waiting = 5)
 
-    y_pred_train = model.predict(X_train, device)
-    y_pred_val = model.predict(X_val, device)
+    #le sumo 1 a la prediccion para volver a las clases originales
+    y_pred_train = model.predict(X_train, device) + 1
+    y_pred_val = model.predict(X_val, device) + 1
     train_metrics = evaluar_metricas_clasificacion(y_pred_train, y_train)
     val_metrics = evaluar_metricas_clasificacion(y_pred_val, y_val)
 
@@ -137,22 +147,29 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
 
     return train_metrics, val_metrics
 
-def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
-    y_train = y_train.astype(np.int64)
-    y_val = y_val.astype(np.int64)
+def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100, pesos = None):
+    y_train_temp = y_train.astype(np.int64) - 1
+    y_val_temp = y_val.astype(np.int64) - 1
 
-    counts = np.bincount(y_train)
-    weights = np.sqrt(counts.sum() / counts)
-    weights = weights / weights.mean()
-    class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
+    #rebalanceo:
+    if pesos is None:
+        counts = np.bincount(y_train_temp)
+        weights = counts.sum() / counts
+        weights = weights / weights.mean()
+    else:
+        #transformo de {1: , 2: , 3: , 4: , 5: } a lista
+        weights = [pesos[1], pesos[2], pesos[3], pesos[4], pesos[5]]
+    class_weights = torch.tensor(np.sqrt(weights), dtype=torch.float32, device=device)
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.Adam(modelo.parameters(), lr=learning_rate)
     
-    train_loader, val_loader = make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64)
+    #entreno con las clases temporales de 0 a 4
+    train_loader, val_loader = make_dataloaders(X_train, y_train_temp, X_val, y_val_temp, n_batches=64)
     modelo.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs)
     
-    y_pred_val = modelo.predict(X_val, device)
+    #sumo 1 a las predicciones para volver a las clases de 1 a 5
+    y_pred_val = modelo.predict(X_val, device) + 1
     f1_val = f1_score(y_val, y_pred_val, average="macro")
     return f1_val
 
@@ -182,11 +199,15 @@ def run_grid_search_pytorch_regresion(modelo, learning_rate, model_name, X_train
     r2_val = r2_score(y_val, y_pred_val)
     return r2_val
 
-def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn = mean_squared_error, higher_is_better=False, n_repeats=5, random_state=42):
+def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn = mean_squared_error, higher_is_better=False, n_repeats=5, random_state=42, clasificacion = False):
     generador_numeros_aleatorios = np.random.default_rng(random_state)
 
     #defino el baseline para ver si al permutar la columna (para descorrelacionar sus valores con la prediccion) afecta
-    y_pred_base = model.predict(X, device)
+    if clasificacion is True: #modifique las clases en el entrenamiento asi que tengo que sumar 1 a la prediccion
+        y_pred_base = model.predict(X, device) + 1
+    else: #para regresion no modifico las predicciones
+        y_pred_base = model.predict(X, device)
+
     baseline_score = metric_fn(y, y_pred_base)
 
     means = []
