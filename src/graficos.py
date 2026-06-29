@@ -139,7 +139,7 @@ def plot_boxplot_rating_por_is_series(df_us_en):
     plt.title("average_rating vs is_series", fontweight = "bold")
     plt.show()
 
-def plot_scatte_rating_por_num_pages(df_us_en):
+def plot_scatter_rating_por_num_pages(df_us_en):
     plt.figure(figsize = (6, 6))
     sns.scatterplot(data = df_us_en, x = "num_pages", y = "average_rating", alpha = 0.6)
     plt.xlabel("Numero de paginas")
@@ -147,7 +147,7 @@ def plot_scatte_rating_por_num_pages(df_us_en):
     plt.title("num_pages vs average_rating", fontweight = "bold")
     plt.show()
 
-def plot_scatte_rating_por_publication_year(df_us_en):
+def plot_scatter_rating_por_publication_year(df_us_en):
     plt.figure(figsize = (6, 6))
     sns.scatterplot(data = df_us_en, x = "publication_year", y = "average_rating", alpha = 0.6)
     plt.xlabel("Año de publicacion")
