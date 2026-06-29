@@ -95,19 +95,31 @@ print("Device:", modelo_embeddings.device)
 
 descripcion_pca = entrenar_pca_para_texto(df_train["description"], modelo_embeddings, componentes_conservar = 50)
 print("termino de entrenar")
+print("empiezo guardar")
+joblib.dump(descripcion_pca, "descripcion_pca.joblib")
 
 #Set de entrenamiento:
 descripcion_emb_train = generar_embeddings_pca(df_train["description"], modelo_embeddings, descripcion_pca)
 print("termino embedding train")
+np.save("descripcion_emb_train.npy", descripcion_emb_train)
+print("temrino de guardar")
 #Set de validacion:
 descripcion_emb_val = generar_embeddings_pca(df_val["description"], modelo_embeddings, descripcion_pca)
 print("termino embedding val")
+np.save("descripcion_emb_val.npy", descripcion_emb_val)
+print("termino guardado")
 #Set de testeo:
 descripcion_emb_test = generar_embeddings_pca(df_test["description"], modelo_embeddings, descripcion_pca)
 print("termino embedding test")
+np.save("descripcion_emb_test.npy", descripcion_emb_test)
+print("termino de guardar")
 
 #Entrenamos el PCA solo con el set de train
+print("empiezo a entrenar titulo")
 titulo_pca = entrenar_pca_para_texto(df_train["title"], modelo_embeddings, componentes_conservar = 20)
+print("empiezo a guardar")
+joblib.dump(titulo_pca, "titulo_pca.joblib")
+print("termino de guardar")
 
 #Set de entrenamiento:
 titulo_emb_train = generar_embeddings_pca(df_train["title"], modelo_embeddings, titulo_pca)
@@ -119,10 +131,8 @@ print("termino embedding val")
 titulo_emb_test = generar_embeddings_pca(df_test["title"], modelo_embeddings, titulo_pca)
 print("termino embedding test")
 
-print("empiezo guardados")
-joblib.dump(descripcion_pca, "descripcion_pca.joblib")
-joblib.dump(titulo_pca, "titulo_pca.joblib")
-np.save("descripcion_emb_train.npy", descripcion_emb_train)
-np.save("descripcion_emb_val.npy", descripcion_emb_val)
+print("guardo titulos")
 np.save("titulo_emb_train.npy", titulo_emb_train)
 np.save("titulo_emb_val.npy", titulo_emb_val)
+np.save("titulo_emb_test.npy", titulo_emb_test)
+print("TERMINEEEEEEEEEEEEEEEE")

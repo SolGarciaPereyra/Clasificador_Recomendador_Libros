@@ -27,6 +27,14 @@ checkpoint_fusion11.pkl
 1set_test_1.json
 1set_train_1.json
 1set_val_1.json
+descripcion_emb_test.npy
+descripcion_emb_train.npy
+descripcion_emb_val.npy
+descripcion_pca.joblib
+titulo_emb_test.npy
+titulo_emb_train.npy
+titulo_emb_val.npy
+titulo_pca.joblib
 
 *.aux
 *.log
