@@ -6,6 +6,7 @@ goodreads_us_english_sinNaN.json
 goodreads_us_english.json
 goodreads_us_english_primer_filtrado.json
 copia_goodreads_us_english_primer_filtrado copy.json
+goodreads_book_authors.json
 set_test_1.json
 set_train_1.json
 set_val_1.json
@@ -33,4 +34,5 @@ checkpoint_fusion11.pkl
 *.toc
 *.synctex.gz
 
-.ipynb_checkpoints/
+.ipynb_checkpoints/.DS_Store
+**/.DS_Store
