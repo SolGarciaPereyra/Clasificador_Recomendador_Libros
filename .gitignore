@@ -34,4 +34,5 @@ checkpoint_fusion11.pkl
 *.toc
 *.synctex.gz
 
-.ipynb_checkpoints/
+.ipynb_checkpoints/.DS_Store
+**/.DS_Store
