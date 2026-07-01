@@ -257,38 +257,43 @@ def generar_embeddings_pca(textos_variables, modelo, incremental_pca, batch_size
     embeddings_reducidos = np.vstack(embeddings_reducidos)
     return embeddings_reducidos
 
-def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_categoricas, tipo_target, smoothing = 20):
+def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_categoricas, tipo_target, smoothing=20):
     #Aca vamos a guardar toda la info de la codificación
     codificador = {}
     #Calculamos la media global de la variable objetivo (util para usarlo como valor de respaldo para posibles 
     #categorías que aparezcan en val o test, pero no hayan estado en train)
     #Imputariamos con la media y no con la mediana porque, al trabajar con target encoding, 
-    #queremos estimar E[target | author], y su mejor estimacion es la media.
+    #queremos estimar E[target | publisher], y su mejor estimacion es la media.
     media_global_target = y_entrenamiento.mean()
-    
+
     #Recorremos cada columna categórica que queremos codificar:
     for columna in columnas_categoricas:
-        datos_temporales = pd.DataFrame({columna: X_entrenamiento[columna], f"{tipo_target}": y_entrenamiento})
-        #Primero hacemos la codifcacion por media del target (ej: promedio del rating de la autora)
-        estadisticas = (datos_temporales.groupby(columna)[f"{tipo_target}"].agg(["mean", "count"]))
-        media_suavizada = (estadisticas["count"] * estadisticas["mean"] + smoothing * media_global_target) / (estadisticas["count"] + smoothing)
-        mapa_media = media_suavizada.to_dict()
-        #Ahora, hacemos la codifcacion de frecuencia (ej: cantidad de libros por publisher)
+        datos_temporales = pd.DataFrame({columna: X_entrenamiento[columna], tipo_target: y_entrenamiento})
+        #Hacemos la codifcacion de frecuencia (ej: cantidad de libros por publisher)
         mapa_frecuencia = datos_temporales[columna].value_counts().to_dict()
-        codificador[columna] = {"media": mapa_media, "frecuencia": mapa_frecuencia, "media_global": media_global_target}
-    
+        codificador[columna] = {"frecuencia": mapa_frecuencia}
+
+        #Solo calculamos Target Encoding si no es "author_id_principal":
+        if columna != "author_id_principal":
+            estadisticas = datos_temporales.groupby(columna)[tipo_target].agg(["mean", "count"])
+            media_suavizada = (estadisticas["count"] * estadisticas["mean"] + smoothing * media_global_target) / (estadisticas["count"] + smoothing)
+            codificador[columna]["media"] = media_suavizada.to_dict()
+            codificador[columna]["media_global"] = media_global_target
+
     return codificador
 
 def transformar_features_categoricas(X_datos, codificador):
     X_transformado = X_datos.copy()
-    
+
     #Recorremos cada columna que fue codificada:
     for columna in codificador.keys():
-        #Primero hacemos la codifcacion por media del target:
-        X_transformado[f"{columna}_media"] = (X_transformado[columna].map(codificador[columna]["media"]).fillna(codificador[columna]["media_global"]))
-        #Ahora, hacemos la codifcacion de frecuencia:
+        #Solo si existe el Target Encoding:
+        if "media" in codificador[columna]:
+            X_transformado[f"{columna}_media"] = (X_transformado[columna].map(codificador[columna]["media"]).fillna(codificador[columna]["media_global"]))
+
+        #Ahora hacemos la codificacion de frecuencia:
         X_transformado[f"{columna}_frecuencia"] = (X_transformado[columna].map(codificador[columna]["frecuencia"]).fillna(0))
-        
+
     return X_transformado
 
 """features que podemos volar
