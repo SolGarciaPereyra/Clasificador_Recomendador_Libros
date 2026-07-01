@@ -505,3 +505,21 @@ def plot_losses(train_losses, val_losses, name_model):
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+def plot_silhouette_inercia(ks, silhouettes, inertias):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    axes[0].plot(ks, silhouettes, marker="o")
+    axes[0].set_title("Silhouette Score")
+    axes[0].set_xlabel("Number of clusters (k)")
+    axes[0].set_ylabel("Silhouette Score")
+    axes[0].grid(True)
+
+    axes[1].plot(ks, inertias, marker="o")
+    axes[1].set_title("Inertia")
+    axes[1].set_xlabel("Number of clusters (k)")
+    axes[1].set_ylabel("Inertia")
+    axes[1].grid(True)
+
+    plt.tight_layout()
+    plt.show()
