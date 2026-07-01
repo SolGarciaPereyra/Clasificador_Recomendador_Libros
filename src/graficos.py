@@ -2,6 +2,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from sklearn.manifold import TSNE
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, f1_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
@@ -522,4 +523,28 @@ def plot_silhouette_inercia(ks, silhouettes, inertias):
     axes[1].grid(True)
 
     plt.tight_layout()
+    plt.show()
+
+def plot_vecinos_knn(muestra, X_scaled, indice_consultado, indices_recomendados, df_recomendador, etiquetas = False):
+    X_plot = X_scaled[muestra]
+    tsne = TSNE(n_components=2, perplexity=30, init="pca", random_state=42)
+    X_emb = tsne.fit_transform(X_plot)
+
+    mask_libro = muestra == indice_consultado
+    mask_recomendaciones = np.isin(muestra, indices_recomendados) & (~mask_libro)
+    mask_otros = ~(mask_libro | mask_recomendaciones)
+
+    plt.figure(figsize=(10,8))
+    plt.scatter(X_emb[mask_otros,0], X_emb[mask_otros,1], s=8, color="lightgray", alpha=0.4, label="Otros")
+    plt.scatter(X_emb[mask_recomendaciones,0], X_emb[mask_recomendaciones,1], s=40, color="royalblue", label="Recomendaciones")
+    plt.scatter(X_emb[mask_libro,0], X_emb[mask_libro,1], s=180, color="red", marker="*", label="Libro consultado")
+
+    if etiquetas:
+        #etiquetas con los titulos del libro
+        for pos, idx_plot in enumerate(muestra):
+            if idx_plot == indice_consultado or idx_plot in indices_recomendados:
+                plt.text(X_emb[pos,0], X_emb[pos,1], df_recomendador.iloc[idx_plot]["title"][:25], fontsize=8)
+
+    plt.title(f"t-SNE alrededor de '{df_recomendador.iloc[indice_consultado]['title']}'")
+    plt.legend()
     plt.show()
