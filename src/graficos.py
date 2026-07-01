@@ -2,6 +2,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from adjustText import adjust_text
 from sklearn.manifold import TSNE
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, f1_score
@@ -541,10 +542,11 @@ def plot_vecinos_knn(muestra, X_scaled, indice_consultado, indices_recomendados,
 
     if etiquetas:
         #etiquetas con los titulos del libro
+        titulos = []
         for pos, idx_plot in enumerate(muestra):
             if idx_plot == indice_consultado or idx_plot in indices_recomendados:
-                plt.text(X_emb[pos,0], X_emb[pos,1], df_recomendador.iloc[idx_plot]["title"][:25], fontsize=8)
-
+                titulos.append(plt.text(X_emb[pos,0], X_emb[pos,1], df_recomendador.iloc[idx_plot]["title"][:25], fontsize=8))
+        adjust_text(titulos, arrowprops=dict(arrowstyle="-", color="gray", lw=0.5))
     plt.title(f"t-SNE alrededor de '{df_recomendador.iloc[indice_consultado]['title']}'")
     plt.legend()
     plt.show()
