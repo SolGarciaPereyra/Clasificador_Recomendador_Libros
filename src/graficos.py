@@ -292,7 +292,7 @@ def plot_learning_curves_xgboost_regression(X_train, y_train, X_val, y_val, n_es
         X_sub = X_train[indices]
         y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de XGBoost para regresion:
-        modelo = XGBRegressor(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, random_state = random_state)
+        modelo = XGBRegressor(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, device = "cuda", tree_method = "hist", random_state = random_state)
         modelo.fit(X_sub, y_sub)
         #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
         pred_train = modelo.predict(X_sub)
@@ -343,7 +343,7 @@ def plot_learning_curves_xgboost_classification(X_train, y_train, X_val, y_val, 
         X_sub = X_train[indices]
         y_sub = y_train[indices]
         #Creamos y entrenamos el modelo de XGBoost para regresion:
-        modelo = XGBClassifier(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, num_class = len(np.unique(y_train)), random_state = random_state)
+        modelo = XGBClassifier(n_estimators = n_estimators, max_depth = max_depth, learning_rate = learning_rate, subsample = subsample, colsample_bytree = colsample_bytree, objective = objective, num_class = len(np.unique(y_train)), device = "cuda", tree_method = "hist", random_state = random_state)
         pesos_sub = pesos[indices]
         modelo.fit(X_sub, y_sub, sample_weight = pesos_sub)
         #Predecimos sobre el mismo conjunto de entrenamiento (para ver el error de train):
