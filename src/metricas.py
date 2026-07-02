@@ -17,3 +17,10 @@ def evaluar_metricas_clasificacion(y_pred, y):
 
 def tabla_metricas(metricas_train, metricas_val, nombres_metricas):
     return pd.DataFrame({"Train": metricas_train, "Validation": metricas_val}, index=nombres_metricas)
+
+def evaluar_metricas_clasificacion_binaria(y_pred, y):
+    accuracy = accuracy_score(y, y_pred)
+    precision = precision_score(y, y_pred, zero_division = 0)
+    recall = recall_score(y, y_pred, zero_division = 0)
+    f1 = f1_score(y, y_pred, zero_division = 0)
+    return accuracy, precision, recall, f1

@@ -550,3 +550,25 @@ def plot_vecinos_knn(muestra, X_scaled, indice_consultado, indices_recomendados,
     plt.title(f"t-SNE alrededor de '{df_recomendador.iloc[indice_consultado]['title']}'")
     plt.legend()
     plt.show()
+
+def plot_aceptacion_subplots(df_train, df_val, df_test):
+    fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+
+    plot_aceptacion_subplot(df_train, axs[0], "Train", "tab:blue")
+    plot_aceptacion_subplot(df_val, axs[1], "Validation", "tab:orange")
+    plot_aceptacion_subplot(df_test, axs[2], "Test", "tab:green")
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_aceptacion_subplot(df, ax, titulo, color):
+    porcentajes = (df["aceptado"].value_counts(normalize=True).sort_index() * 100)
+    bars = ax.bar(porcentajes.index.astype(str), porcentajes.values, color=color)
+    
+    ax.set_xlabel("Libro aceptado")
+    ax.set_ylabel("% de libros")
+    ax.set_title(titulo, fontweight="bold")
+
+    for bar in bars:
+        altura = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, altura, f"{altura:.1f}%", ha="center", va="bottom")

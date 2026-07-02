@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
 from src.features import limpiar_features_no_necesarias
-from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion
+from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion, evaluar_metricas_clasificacion_binaria
 from src.graficos import plot_losses, plot_confusion_matrix
 
 def df_target_to_numpy(target, dfs):
@@ -124,7 +124,7 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
     else:
         #transformo de {1: , 2: , 3: , 4: , 5: } a lista
         weights = [pesos[1], pesos[2], pesos[3], pesos[4], pesos[5]]
-    class_weights = torch.tensor(np.sqrt(weights), dtype=torch.float32, device=device)
+    class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
     #loss_fn = nn.CrossEntropyLoss()
@@ -159,7 +159,7 @@ def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_t
     else:
         #transformo de {1: , 2: , 3: , 4: , 5: } a lista
         weights = [pesos[1], pesos[2], pesos[3], pesos[4], pesos[5]]
-    class_weights = torch.tensor(np.sqrt(weights), dtype=torch.float32, device=device)
+    class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.Adam(modelo.parameters(), lr=learning_rate)
