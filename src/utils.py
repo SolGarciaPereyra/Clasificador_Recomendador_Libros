@@ -106,12 +106,13 @@ def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = tor
     val_ds = TensorDataset(X_vl, y_vl)
 
     batch_size = max(1, len(X_train) // n_batches)
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, pin_memory = True, num_workers = 2, persistent_workers = True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, pin_memory = True, num_workers = 2, persistent_workers = True)
 
     return train_loader, val_loader
 
 def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100, pesos = None):
+    model = model.to(device)
     #temporalmente cambio las clases de 1-5 a 0-4 por la loss
     y_train_temp = y_train.astype(np.int64) - 1
     y_val_temp = y_val.astype(np.int64) - 1
@@ -148,6 +149,7 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
     return train_metrics, val_metrics
 
 def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100, pesos = None):
+    modelo = modelo.to(device)
     y_train_temp = y_train.astype(np.int64) - 1
     y_val_temp = y_val.astype(np.int64) - 1
 
@@ -174,6 +176,7 @@ def run_grid_search_pytorch_clasificacion(modelo, learning_rate, model_name, X_t
     return f1_val
 
 def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100):
+    model = model.to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
@@ -189,6 +192,7 @@ def run_experiment_pytorch_regresion(model, model_name, X_train, y_train, X_val,
     return train_metrics, val_metrics
 
 def run_grid_search_pytorch_regresion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100):
+    modelo = modelo.to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(modelo.parameters(), lr=learning_rate)
     

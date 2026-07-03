@@ -34,7 +34,7 @@ class MLP_regresion(nn.Module):
 
     def predict(self, X, device):
         self.eval()
-        X = torch.tensor(X, dtype=torch.float32).to(device)
+        X = torch.tensor(X, dtype=torch.float32).to(device, non_blocking = True)
         with torch.no_grad():
             out = self(X)
         return out.cpu().numpy().flatten()  # sin argmax, devolvemos el valor crudo
@@ -43,7 +43,7 @@ class MLP_regresion(nn.Module):
         self.train()
         total_loss = 0
         for X, y in dataloader:
-            X, y = X.to(device), y.to(device)
+            X, y = X.to(device, non_blocking = True), y.to(device, non_blocking = True)
             pred = self(X).squeeze(1)  # de (batch, 1) a (batch,) para que matchee con y
             loss = loss_fn(pred, y)
 
