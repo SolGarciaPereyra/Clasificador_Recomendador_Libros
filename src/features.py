@@ -264,7 +264,7 @@ def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_cate
     #categorías que aparezcan en val o test, pero no hayan estado en train)
     #Imputariamos con la media y no con la mediana porque, al trabajar con target encoding, 
     #queremos estimar E[target | publisher], y su mejor estimacion es la media.
-    media_global_target = y_entrenamiento.mean()
+    # media_global_target = y_entrenamiento.mean()
 
     #Recorremos cada columna categórica que queremos codificar:
     for columna in columnas_categoricas:
@@ -273,12 +273,12 @@ def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_cate
         mapa_frecuencia = datos_temporales[columna].value_counts().to_dict()
         codificador[columna] = {"frecuencia": mapa_frecuencia}
 
-        #Solo calculamos Target Encoding si no es "author_id_principal":
-        if columna != "author_id_principal":
-            estadisticas = datos_temporales.groupby(columna)[tipo_target].agg(["mean", "count"])
-            media_suavizada = (estadisticas["count"] * estadisticas["mean"] + smoothing * media_global_target) / (estadisticas["count"] + smoothing)
-            codificador[columna]["media"] = media_suavizada.to_dict()
-            codificador[columna]["media_global"] = media_global_target
+        # #Solo calculamos Target Encoding si no es "author_id_principal":
+        # if columna != "author_id_principal":
+        #     estadisticas = datos_temporales.groupby(columna)[tipo_target].agg(["mean", "count"])
+        #     media_suavizada = (estadisticas["count"] * estadisticas["mean"] + smoothing * media_global_target) / (estadisticas["count"] + smoothing)
+        #     codificador[columna]["media"] = media_suavizada.to_dict()
+        #     codificador[columna]["media_global"] = media_global_target
 
     return codificador
 
@@ -287,9 +287,9 @@ def transformar_features_categoricas(X_datos, codificador):
 
     #Recorremos cada columna que fue codificada:
     for columna in codificador.keys():
-        #Solo si existe el Target Encoding:
-        if "media" in codificador[columna]:
-            X_transformado[f"{columna}_media"] = (X_transformado[columna].map(codificador[columna]["media"]).fillna(codificador[columna]["media_global"]))
+        # #Solo si existe el Target Encoding:
+        # if "media" in codificador[columna]:
+        #     X_transformado[f"{columna}_media"] = (X_transformado[columna].map(codificador[columna]["media"]).fillna(codificador[columna]["media_global"]))
 
         #Ahora hacemos la codificacion de frecuencia:
         X_transformado[f"{columna}_frecuencia"] = (X_transformado[columna].map(codificador[columna]["frecuencia"]).fillna(0))
