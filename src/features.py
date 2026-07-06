@@ -296,6 +296,13 @@ def transformar_features_categoricas(X_datos, codificador):
 
     return X_transformado
 
+def calcular_diferencia_anios(publication_year):
+    return publication_year.max() - publication_year.min()
+
+def calcular_antiguedad_autor(df):
+    df["author_antiguedad"] = (df.groupby("author_id_principal")["publication_year"].transform(calcular_diferencia_anios))
+    return df
+
 """features que podemos volar
 - isbn: podemos eliminar? o nos sirve para el mini recomendador
 - text_reviews count: ok, pero no se usa en el entrenamiento
