@@ -10,10 +10,14 @@ from imblearn.under_sampling import RandomUnderSampler
 from itertools import product
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.model_selection import GridSearchCV, train_test_split
+from xgboost import XGBRegressor, XGBClassifier
 
 from src.features import limpiar_features_no_necesarias
 from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion, evaluar_metricas_clasificacion_binaria
 from src.graficos import plot_losses, plot_confusion_matrix
+from src.metricas import tabla_metricas
 
 def df_target_to_numpy(target, dfs):
     #target puede ser "average_rating" para regresion, o "estrellas" para clasificacion
@@ -233,3 +237,68 @@ def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn
 
     df_importance = pd.DataFrame({"feature": feature_names, "importance": importances}).sort_values("importance", ascending=False).reset_index(drop=True)
     return df_importance
+
+def grid_search_rf_clasificacion(pesos, X, y, parametros_grid_search_rf):
+    RandomForestGridSearchClasificacion = RandomForestClassifier(random_state = 42, class_weight = pesos)
+
+    #uso las mismas opciones de hiperparametros q use en regresion, y los mismos indices para obtener los subconjuntos
+    grid = GridSearchCV(estimator = RandomForestGridSearchClasificacion, param_grid = parametros_grid_search_rf, cv = 3, scoring = "f1_macro", n_jobs = -1, verbose = 2)
+    grid.fit(X, y)
+
+    mejores_parametros = grid.best_params_
+    print(f"Mejores parametros: {mejores_parametros}")
+    print(f"Mejor F1 CV: {grid.best_score_}")
+    return mejores_parametros
+
+def evaluar_modelo_rf_clasificacion(mejores_parametros, pesos, X_train, y_train, X_val, y_val):
+    modeloRandomForestClasificacion = RandomForestClassifier(**mejores_parametros, random_state = 42, class_weight = pesos)
+    modeloRandomForestClasificacion.fit(X_train, y_train)
+
+    y_pred_train_modeloRandomForestClasificacion = (modeloRandomForestClasificacion.predict(X_train))
+    y_pred_val_modeloRandomForestClasificacion = (modeloRandomForestClasificacion.predict(X_val))
+
+    metricas_train = evaluar_metricas_clasificacion(y_pred_train_modeloRandomForestClasificacion, y_train)
+    metricas_val = evaluar_metricas_clasificacion(y_pred_val_modeloRandomForestClasificacion, y_val)
+    tabla_metricas_rf_clasificacion = tabla_metricas(metricas_train, metricas_val, ["Accuracy", "Precision", "Recall", "F1"])
+    print(tabla_metricas_rf_clasificacion)
+
+    cm_train = confusion_matrix(y_train, y_pred_train_modeloRandomForestClasificacion)
+    cm_val = confusion_matrix(y_val, y_pred_val_modeloRandomForestClasificacion)
+    plot_confusion_matrix(cm_train, cm_val)
+    return tabla_metricas_rf_clasificacion, modeloRandomForestClasificacion
+
+def grid_search_xgb_clasificacion(pesos, X, y, parametros_grid_search_xgb):
+    pesos_transformados_sub = np.array([pesos[y_i] for y_i in y])
+    XGBoostGridSearchClasificacion = XGBClassifier(objective = "multi:softmax", num_class = 5, device = "cuda", tree_method = "hist", random_state = 42) 
+
+    #uso los mismos indices para obtener los subconjuntos
+    grid = GridSearchCV(estimator = XGBoostGridSearchClasificacion, param_grid = parametros_grid_search_xgb, cv = 3, scoring = "f1_macro", n_jobs = 1, verbose = 2)
+    grid.fit(X, y, sample_weight = pesos_transformados_sub)
+
+    mejores_parametros = grid.best_params_
+    print(f"Mejores parametros: {mejores_parametros}")
+    print(f"Mejor F1 CV: {grid.best_score_}")
+    return mejores_parametros
+
+def evaluar_modelo_xgb_clasificacion(mejores_parametros, pesos, X_train, y_train, X_val, y_val):
+    pesos_transformados_train = np.array([pesos[y] for y in y_train])
+    modeloXGBoostClasificacion = XGBClassifier(**mejores_parametros, objective = "multi:softmax", num_class = 5, device = "cuda", tree_method = "hist", random_state = 42) 
+    modeloXGBoostClasificacion.fit(X_train, y_train, sample_weight = pesos_transformados_train) #XGBoost no requiere obligatoriamnete que se escalen los valores, pero lo hag para poder comprar la feature importance
+
+    y_pred_train = (modeloXGBoostClasificacion.predict(X_train))
+    y_pred_val = (modeloXGBoostClasificacion.predict(X_val))
+    #volvemos a las clases originales sumando 1
+    y_train = y_train + 1
+    y_pred_train_modeloXGBoostClasificacion = y_pred_train + 1
+    y_pred_val_modeloXGBoostClasificacion = y_pred_val + 1
+
+    #calculo las metricas usando las clases originales entre 1 y 5
+    metricas_train = evaluar_metricas_clasificacion(y_pred_train_modeloXGBoostClasificacion, y_train)
+    metricas_val = evaluar_metricas_clasificacion(y_pred_val_modeloXGBoostClasificacion, y_val)
+    tabla_metricas_xgboost_clasificacion = tabla_metricas(metricas_train, metricas_val, ["Accuracy", "Precision", "Recall", "F1"])
+    print(tabla_metricas_xgboost_clasificacion)
+
+    cm_train = confusion_matrix(y_train, y_pred_train_modeloXGBoostClasificacion)
+    cm_val = confusion_matrix(y_val, y_pred_val_modeloXGBoostClasificacion)
+    plot_confusion_matrix(cm_train, cm_val)
+    return tabla_metricas_xgboost_clasificacion, modeloXGBoostClasificacion
