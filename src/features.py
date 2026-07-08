@@ -223,40 +223,6 @@ def detectar_language_code(fila):
     except:
         return "unknown"
 
-def entrenar_pca_para_texto(textos_variables, modelo, componentes_conservar = 50, batch_size = 1000):
-    #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
-    textos_variables = textos_variables.fillna("").astype(str).tolist()
-    #Decidimos usar el PCA incremental proque nos permite procesar los datos en bloques, sin cargar 
-    #todo en memoria (util por nuestra cantidad de muestras, asi no llena la RAM)
-    incremental_pca = IncrementalPCA(n_components = componentes_conservar)
-
-    #Ahora, tenemos que hacer un mini entrenamiento del PCA, ajustandolo mediante batches de datos
-    for num in range(0, len(textos_variables), batch_size):
-        batch = textos_variables[num: num + batch_size]
-        #generamos los mebeddings para este batch, usando el modelo pre-entrenado:
-        embedding = modelo.encode(batch, convert_to_numpy = True, show_progress_bar = False)
-        #Ajustamos el PCA:
-        incremental_pca.partial_fit(embedding)
-
-    return incremental_pca
-
-def generar_embeddings_pca(textos_variables, modelo, incremental_pca, batch_size = 1000):
-    #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
-    textos_variables = textos_variables.fillna("").astype(str).tolist()
-
-    #Ahora si reducimos todos los datos:
-    embeddings_reducidos = []
-    for pos in range(0, len(textos_variables), batch_size):
-        batch = textos_variables[pos : pos + batch_size]
-        embedding = modelo.encode(batch, convert_to_numpy = True, show_progress_bar = False)
-        #Aplicamos la transformacion PCA que entrenamos antes
-        embedding_reducido = incremental_pca.transform(embedding)
-        embeddings_reducidos.append(embedding_reducido)
-
-    #Unimos todos los batches reducidos en un solo array
-    embeddings_reducidos = np.vstack(embeddings_reducidos)
-    return embeddings_reducidos
-
 def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_categoricas, tipo_target, smoothing=20):
     #Aca vamos a guardar toda la info de la codificación
     codificador = {}
@@ -272,13 +238,6 @@ def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_cate
         #Hacemos la codifcacion de frecuencia (ej: cantidad de libros por publisher)
         mapa_frecuencia = datos_temporales[columna].value_counts().to_dict()
         codificador[columna] = {"frecuencia": mapa_frecuencia}
-
-        # #Solo calculamos Target Encoding si no es "author_id_principal":
-        # if columna != "author_id_principal":
-        #     estadisticas = datos_temporales.groupby(columna)[tipo_target].agg(["mean", "count"])
-        #     media_suavizada = (estadisticas["count"] * estadisticas["mean"] + smoothing * media_global_target) / (estadisticas["count"] + smoothing)
-        #     codificador[columna]["media"] = media_suavizada.to_dict()
-        #     codificador[columna]["media_global"] = media_global_target
 
     return codificador
 
