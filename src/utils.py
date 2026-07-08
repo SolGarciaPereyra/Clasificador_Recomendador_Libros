@@ -116,7 +116,7 @@ def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = tor
 
     return train_loader, val_loader
 
-def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100, pesos = None):
+def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100, pesos = None, save = False):
     model = model.to(device)
     #temporalmente cambio las clases de 1-5 a 0-4 por la loss
     y_train_temp = y_train.astype(np.int64) - 1
@@ -150,6 +150,9 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
     cm_val = confusion_matrix(y_val, y_pred_val)
     plot_confusion_matrix(cm_train, cm_val)
     plot_losses(train_losses, val_losses, f"{model_name} - pytorch")
+
+    if save is True:
+        torch.save(model.state_dict(), "modelos/mlp_clasificacion.pth")
 
     return train_metrics, val_metrics
 
