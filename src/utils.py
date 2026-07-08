@@ -13,6 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV, train_test_split
 from xgboost import XGBRegressor, XGBClassifier
+from IPython.display import display
 
 from src.features import limpiar_features_no_necesarias
 from src.metricas import evaluar_metricas_clasificacion, evaluar_metricas_regresion, evaluar_metricas_clasificacion_binaria
@@ -260,7 +261,7 @@ def evaluar_modelo_rf_clasificacion(mejores_parametros, pesos, X_train, y_train,
     metricas_train = evaluar_metricas_clasificacion(y_pred_train_modeloRandomForestClasificacion, y_train)
     metricas_val = evaluar_metricas_clasificacion(y_pred_val_modeloRandomForestClasificacion, y_val)
     tabla_metricas_rf_clasificacion = tabla_metricas(metricas_train, metricas_val, ["Accuracy", "Precision", "Recall", "F1"])
-    print(tabla_metricas_rf_clasificacion)
+    display(tabla_metricas_rf_clasificacion)
 
     cm_train = confusion_matrix(y_train, y_pred_train_modeloRandomForestClasificacion)
     cm_val = confusion_matrix(y_val, y_pred_val_modeloRandomForestClasificacion)
