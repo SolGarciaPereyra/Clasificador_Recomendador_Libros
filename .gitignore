@@ -35,6 +35,7 @@ titulo_emb_test.npy
 titulo_emb_train.npy
 titulo_emb_val.npy
 titulo_pca.joblib
+dataset_recomendador_m.json
 
 *.aux
 *.log
