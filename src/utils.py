@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, mean_squared_error, f1_score, r2_score
+from sklearn.metrics import confusion_matrix, mean_squared_error, f1_score, r2_score, precision_score
 from imblearn.under_sampling import RandomUnderSampler
 from itertools import product
 from sklearn.preprocessing import StandardScaler
@@ -303,3 +303,40 @@ def evaluar_modelo_xgb_clasificacion(mejores_parametros, pesos, X_train, y_train
     cm_val = confusion_matrix(y_val, y_pred_val_modeloXGBoostClasificacion)
     plot_confusion_matrix(cm_train, cm_val)
     return tabla_metricas_xgboost_clasificacion, modeloXGBoostClasificacion
+
+def run_grid_search_pytorch_aceptacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100, pesos = None):
+    #rebalanceo: transformo {0: ..., 1: ...} a lista
+    weights = [pesos[0], pesos[1]]
+    class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
+
+    loss_fn = nn.CrossEntropyLoss(weight=class_weights)
+    optimizer = torch.optim.Adam(modelo.parameters(), lr=learning_rate)
+    train_loader, val_loader = make_dataloaders(X_train, y_train.astype(np.int64), X_val, y_val.astype(np.int64), n_batches=64)
+
+    modelo.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs)
+    y_pred_val = modelo.predict(X_val, device)
+    precision_val = precision_score(y_val, y_pred_val, average="binary", zero_division=0)
+
+    return precision_val
+
+def run_experiment_pytorch_aceptacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100, pesos = None):
+    #rebalanceo: transformo {0: ..., 1: ...} a lista
+    weights = [pesos[0], pesos[1]]
+    class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
+
+    loss_fn = nn.CrossEntropyLoss(weight=class_weights)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    train_loader, val_loader = make_dataloaders(X_train, y_train.astype(np.int64), X_val, y_val.astype(np.int64), n_batches=64)
+
+    train_losses, val_losses = model.train_model(train_loader, val_loader, optimizer, loss_fn, device, epochs=epochs, waiting=5)
+    y_pred_train = model.predict(X_train, device)
+    y_pred_val = model.predict(X_val, device)
+
+    train_metrics = evaluar_metricas_clasificacion_binaria(y_pred_train, y_train)
+    val_metrics = evaluar_metricas_clasificacion_binaria(y_pred_val, y_val)
+
+    cm_train = confusion_matrix(y_train, y_pred_train, labels=[0, 1])
+    cm_val = confusion_matrix(y_val, y_pred_val, labels=[0, 1])
+    plot_confusion_matrix(cm_train, cm_val, labels = [0, 1])
+
+    return train_metrics, val_metrics
