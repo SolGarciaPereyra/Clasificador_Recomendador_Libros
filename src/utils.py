@@ -304,6 +304,38 @@ def evaluar_modelo_xgb_clasificacion(mejores_parametros, pesos, X_train, y_train
     plot_confusion_matrix(cm_train, cm_val)
     return tabla_metricas_xgboost_clasificacion, modeloXGBoostClasificacion
 
+def grid_search_xgb_aceptacion(pesos, X, y, parametros_grid_search_xgb):
+    pesos_transformados_sub = np.array([pesos[y_i] for y_i in y])
+    XGBoostGridSearchClasificacion = XGBClassifier(objective = "binary:logistic", device = "cuda", tree_method = "hist", random_state = 42) 
+
+    #uso los mismos indices para obtener los subconjuntos
+    grid = GridSearchCV(estimator = XGBoostGridSearchClasificacion, param_grid = parametros_grid_search_xgb, cv = 3, scoring = "precision", n_jobs = 1, verbose = 1, error_score = "raise")
+    grid.fit(X, y, sample_weight = pesos_transformados_sub)
+
+    mejores_parametros = grid.best_params_
+    print(f"Mejores parametros: {mejores_parametros}")
+    print(f"Mejor precision CV: {grid.best_score_}")
+    return mejores_parametros
+
+def evaluar_modelo_xgb_aceptacion(mejores_parametros, pesos, X_train, y_train, X_val, y_val):
+    pesos_transformados_train = np.array([pesos[y] for y in y_train])
+    modeloXGBoostClasificacion = XGBClassifier(**mejores_parametros, objective = "binary:logistic", device = "cuda", tree_method = "hist", random_state = 42) 
+    modeloXGBoostClasificacion.fit(X_train, y_train, sample_weight = pesos_transformados_train) #XGBoost no requiere obligatoriamnete que se escalen los valores, pero lo hag para poder comprar la feature importance
+
+    y_pred_train = (modeloXGBoostClasificacion.predict(X_train))
+    y_pred_val = (modeloXGBoostClasificacion.predict(X_val))
+
+    #calculo las metricas usando las clases originales entre 1 y 5
+    metricas_train = evaluar_metricas_clasificacion_binaria(y_pred_train, y_train)
+    metricas_val = evaluar_metricas_clasificacion_binaria(y_pred_val, y_val)
+    tabla_metricas_xgboost_clasificacion = tabla_metricas(metricas_train, metricas_val, ["Accuracy", "Precision", "Recall", "F1"])
+    print(tabla_metricas_xgboost_clasificacion)
+
+    cm_train = confusion_matrix(y_train, y_pred_train, labels = [0, 1])
+    cm_val = confusion_matrix(y_val, y_pred_val, labels = [0, 1])
+    plot_confusion_matrix(cm_train, cm_val, labels = [0, 1])
+    return tabla_metricas_xgboost_clasificacion, modeloXGBoostClasificacion, metricas_train, metricas_val
+
 def run_grid_search_pytorch_aceptacion(modelo, learning_rate, model_name, X_train, y_train, X_val, y_val, device, epochs = 100, pesos = None):
     #rebalanceo: transformo {0: ..., 1: ...} a lista
     weights = [pesos[0], pesos[1]]
