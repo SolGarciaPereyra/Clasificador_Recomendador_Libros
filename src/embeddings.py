@@ -26,6 +26,9 @@ df_test = pd.concat(chunk_list, ignore_index=True)
 
 
 def entrenar_pca_para_texto(textos_variables, modelo, componentes_conservar = 50, batch_size = 2000, encode_batch_size = 256):
+    """
+    
+    """
     #Convertimos "textos_variables" a una lista de strings, reemplazando los NaN por un string vacio
     textos_variables = textos_variables.fillna("").astype(str).tolist()
     #Decidimos usar el PCA incremental proque nos permite procesar los datos en bloques, sin cargar 
