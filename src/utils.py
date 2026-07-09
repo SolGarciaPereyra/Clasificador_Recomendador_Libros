@@ -36,6 +36,7 @@ def df_features_to_numpy(features, dfs):
     return Xs
 
 def fusionar_libros(grupo):
+    """Fusiona libros con autor y titulo iguales, gestiona la fusion de las otras features del libro"""
     #Comenzamos por ordenar (del mas antiguo al mas reciente) las ediciones del libro por año de publicacion
     #Vamos a usar a la primera fila (la más antigua) como "base" para completar ciertas features
     grupo = grupo.sort_values("publication_year")
@@ -117,6 +118,8 @@ def make_dataloaders(X_train, y_train, X_val, y_val, n_batches=64, y_dtype = tor
     return train_loader, val_loader
 
 def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_val, y_val, device, learning_rate = 0.001, epochs = 100, pesos = None, save = False):
+    """Nuestro target de clasificacion multiclase empieza en 1, pero para entrenar se necesita que empiece en 0,
+    hago un par de modificaciones para soportar esto. """
     model = model.to(device)
     #temporalmente cambio las clases de 1-5 a 0-4 por la loss
     y_train_temp = y_train.astype(np.int64) - 1
@@ -133,7 +136,6 @@ def run_experiment_pytorch_clasificacion(model, model_name, X_train, y_train, X_
     class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
     
     loss_fn = nn.CrossEntropyLoss(weight=class_weights)
-    #loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
     #entreno con los valores de clase temporales
@@ -212,6 +214,8 @@ def run_grid_search_pytorch_regresion(modelo, learning_rate, model_name, X_train
     return r2_val
 
 def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn = mean_squared_error, higher_is_better=False, n_repeats=5, random_state=42, clasificacion = False):
+    """Pytorch no tiene una funcion integrada para saber la feature importance del modelo, por lo que
+    se permuta cada feature (de a una) para ver como afecta en la prediccion. """
     generador_numeros_aleatorios = np.random.default_rng(random_state)
 
     #defino el baseline para ver si al permutar la columna (para descorrelacionar sus valores con la prediccion) afecta
@@ -245,7 +249,6 @@ def permutation_importance_pytorch(model, X, y, feature_names, device, metric_fn
 def grid_search_rf_clasificacion(pesos, X, y, parametros_grid_search_rf):
     RandomForestGridSearchClasificacion = RandomForestClassifier(random_state = 42, class_weight = pesos)
 
-    #uso las mismas opciones de hiperparametros q use en regresion, y los mismos indices para obtener los subconjuntos
     grid = GridSearchCV(estimator = RandomForestGridSearchClasificacion, param_grid = parametros_grid_search_rf, cv = 3, scoring = "f1_macro", n_jobs = -1, verbose = 2)
     grid.fit(X, y)
 
