@@ -1,8 +1,10 @@
 def recomendar_por_idx(modelo, X, indice_libro, n_recomendaciones = 10):
+    """Devuelve los indices de los libros recomendados con sus respectivas distancias"""
     distancias, indices = modelo.kneighbors(X[indice_libro].reshape(1, -1), n_neighbors = n_recomendaciones + 1)
     return indices[0][1:], distancias[0][1:]
 
-def recomendar_por_libro(modelo, libros_df, X, titulo_autor, titulo_a_indice, cant_recomendaciones = 5):
+def recomendar_por_libro(modelo, libros_df, X, titulo_autor, titulo_a_indice, cant_recomendaciones = 5):    
+    """Devuelve las recomendaciones a partir del titulo del libro pasado por parametro"""
 
     #Primer caso: No encontramos ningun libro con esos datos
     if (titulo_autor not in titulo_a_indice):
@@ -22,6 +24,7 @@ def recomendar_por_libro(modelo, libros_df, X, titulo_autor, titulo_a_indice, ca
     return recomendaciones[columnas]
 
 def mostrar_recomendaciones(recomendaciones):
+    """Funcion auxiliar para mostrar las recomendaciones"""
     print(">>> Estoy mostrando recomendaciones")
     html = """
     <h2 style="

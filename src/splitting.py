@@ -2,6 +2,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 def split_estratificado_autor(df, test_size=0.2, val_size=0.2):
     """
+    Funcion de split estratificado por autor:
     - garantiza que ningun autor aparezca en mas de un split
     - intenta mantener la distribución de "estrellas" balanceada entre splits,
       estratificando segun su clase dominante de estrellas de cada autor

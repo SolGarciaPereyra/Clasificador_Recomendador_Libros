@@ -9,6 +9,7 @@ from sklearn.metrics import mean_squared_error, f1_score
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from xgboost import XGBRegressor, XGBClassifier
 
+#DISCLAIMER: Los fragmentos de las funciones relacinados con la visualizacion fueron generados con la ayuda de chatgpt
 
 def plot_rating(df): 
     plt.hist(df["average_rating"], bins=50, edgecolor="white")
@@ -106,7 +107,7 @@ def plot_boxplot_rating_por_genero(df): #
     plt.xlabel("Género")
     plt.ylabel("Average Rating")
     plt.title("Distribución de ratings por género", fontweight = "bold")
-    plt.suptitle("")  # elimina el titulo automático de pandas
+    plt.suptitle("")  
     plt.tight_layout()
     plt.show()
 

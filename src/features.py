@@ -28,7 +28,8 @@ def one_hot_language(df):
     df = df.join(encoded_df)
     return df
 
-def one_hot_format(df): #TODO: sacar, deberia ser con un multi binarizer
+def one_hot_format(df): 
+    #one hot encoding de la feature format
     encoder_format = OneHotEncoder(sparse_output=False)
     encoded_format = encoder_format.fit_transform(df[["format_group"]])
     encoded_df = pd.DataFrame(encoded_format, columns = encoder_format.get_feature_names_out(["format_group"]), index = df.index)
@@ -44,10 +45,16 @@ def multi_binarizer_genre(df):
     return df
 
 def transformar_target_a_estrellas(target):
+    #transforma el rating continuo en una distribucion discreta de estrellas
     return target.round().astype(int)
 
-#SACADO DEL EDA:
+
+############################
+# Feature format
+############################
+
 def normalize_format(value):
+    """Unifica formatos repetidos bajo diferentes nombres y los asigna"""
     #Si el valor no es un string:
     if not isinstance(value, str):
         return "UNKNOWN"
@@ -120,7 +127,12 @@ def normalize_format(value):
 
     return "OTHER"
 
-#ANALISIS DE GENEROS
+
+############################
+# Feature genero
+############################
+
+#Defino los terminos que permiten identificar cada genero
 generos_compuestos = ["science-fiction", "young-adult", "non-fiction", "sci-fi", "self-help"] #generos que no hay que separar
 
 fiction_terms = ["fiction", "novel", "novels", "narrativa", "lit", "literary", "literature"]
@@ -165,6 +177,7 @@ def obtener_score(item):
     return score
 
 def extraer_generos_libro(shelves):
+    """Determina los generos de un libro a partir de su diccionario de shelves mas repetidos"""
     generos = {}
 
     for shelf in shelves:
@@ -189,39 +202,25 @@ def extraer_generos_libro(shelves):
         top6.append(genero)
     return top6
 
+
+############################
+# Feature author
+############################
+
 def primer_tiene_role_vacio(authors_list):
     return authors_list[0]["role"] == ""
 
 def extraer_autor_principal(autores_sin_preprocesar):
     """
     autores_sin preprocesar: [{authorId, role}, {authorid, role})]
-    Asumimos que el primer elemento de la lista es el autor principal (orden tipico de Goodreads)
+    Analizamos el diccionario para quedarnos unicamente con el escritor
+    Asumimos que el primer elemento de la lista es el autor principal (en sentido de escritor), es el orden usual de Goodreads
     """
-    # Buscar el primero con role vacío; si no hay, usar el primero de la lista
+    #buscar el primer elemento con role vacio
     for dic_autores in autores_sin_preprocesar:
         if dic_autores["role"] == "":
             return dic_autores["author_id"]
     return autores_sin_preprocesar[0]["author_id"]
-
-def detectar_language_code(fila):
-    try:
-        descripcion = str(fila["description"]).strip()
-        #Priorizarmos detectar el idioma usando la feature "description" si es que tiene suficiente texto:
-        if ((pd.notna(descripcion)) and (len(descripcion) > 50)):
-            return detect(descripcion)
-        
-        #Pero, si la muestra no tiene descripción, usamos el titulo:
-        title = str(fila["title"]).strip()
-        if len(title) > 0:
-            return detect(title)
-
-        #Es el caso en el que la muestra no tiene ni titulo ni descripcion lo suficientemente larga:
-        return "unknown"
-
-    #Entramos si salta algun error en la seccion "try" (ej: no existe alguna de las dos columans mencioandas, o las funciones
-    #usadas tiran algun error)
-    except:
-        return "unknown"
 
 def crear_codificador_categorico(X_entrenamiento, y_entrenamiento, columnas_categoricas, tipo_target, smoothing=20):
     #Aca vamos a guardar toda la info de la codificación
@@ -246,11 +245,6 @@ def transformar_features_categoricas(X_datos, codificador):
 
     #Recorremos cada columna que fue codificada:
     for columna in codificador.keys():
-        # #Solo si existe el Target Encoding:
-        # if "media" in codificador[columna]:
-        #     X_transformado[f"{columna}_media"] = (X_transformado[columna].map(codificador[columna]["media"]).fillna(codificador[columna]["media_global"]))
-
-        #Ahora hacemos la codificacion de frecuencia:
         X_transformado[f"{columna}_frecuencia"] = (X_transformado[columna].map(codificador[columna]["frecuencia"]).fillna(0))
 
     return X_transformado
@@ -259,35 +253,33 @@ def calcular_diferencia_anios(publication_year):
     return publication_year.max() - publication_year.min()
 
 def calcular_antiguedad_autor(df):
+    """Calcula la diferencia entre el libro mas reciente publicado y el mas antiguo"""
     df["author_antiguedad"] = (df.groupby("author_id_principal")["publication_year"].transform(calcular_diferencia_anios))
     return df
 
-"""features que podemos volar
-- isbn: podemos eliminar? o nos sirve para el mini recomendador
-- text_reviews count: ok, pero no se usa en el entrenamiento
-- series: transformar a is_standalone -> booleano
-- country_code: hacer one hot encoding sobre si esta en US o no
-- language_code: 
-- popular_shelves: 
-- asin: volar 
-- is_ebook: graficar y ver si esto tiene impacto o no
-- average_rating: target
-- kindle_asin: volar
-- similar_books: es hacer trampa?
-- description: ver como tratarla
-- format: transformarlo con one hot encoding
-- publication_month: volar
-- publication_year: lo dejamos asi --> eliminar outliers y, tambien los datos erroneos? --> que hacemos con sus NaN??
-- url: no se si nos sirve, tal vez para despues. diria que volar
-- image_url: volar
-- book_id: ni idea
-- ratings count: dejar asi --> eliminar...??
-- work id: volar
-- titulo: nos lo quedamos asi pero no lo usamos para el entrenamiento
-- title_without_series: volar, nos quedamos solo con el titulo
-- authors: es un diccionario: como lo tratamos
-- publisher: transformar a bool de si tiene publisher o no?
-- num_pages: nos lo quedamos asi --> eliminar outliers y valores ilogicos --> que hacemos con sus NaN??
-- publication_day: volar
-- isbn13: volar
-"""
+
+############################
+# Feature language
+############################
+
+def detectar_language_code(fila):
+    try:
+        descripcion = str(fila["description"]).strip()
+        #Priorizarmos detectar el idioma usando la feature "description" si es que tiene suficiente texto:
+        if ((pd.notna(descripcion)) and (len(descripcion) > 50)):
+            return detect(descripcion)
+        
+        #Pero, si la muestra no tiene descripción, usamos el titulo:
+        title = str(fila["title"]).strip()
+        if len(title) > 0:
+            return detect(title)
+
+        #Es el caso en el que la muestra no tiene ni titulo ni descripcion lo suficientemente larga:
+        return "unknown"
+
+    #Entramos si salta algun error en la seccion "try" (ej: no existe alguna de las dos columans mencioandas, o las funciones
+    #usadas tiran algun error)
+    except:
+        return "unknown"
+
+

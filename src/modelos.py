@@ -4,12 +4,13 @@ from tqdm import tqdm
 import numpy as np
 import copy
 
-class MLP_regresion(nn.Module):
+#Observacion: estos modelos fueron reutilizados de la implementacion realizada en tps anteriores
+
+class MLP_regresion(nn.Module): 
 
     def __init__(self, input_size, hidden_layers=[128, 64], activation=nn.ReLU, dropout=0):
         super().__init__()
 
-        # output_size = 1, no n_classes -> una sola neurona de salida
         layer_sizes = [input_size] + hidden_layers + [1]
         layers = []
 
@@ -37,14 +38,14 @@ class MLP_regresion(nn.Module):
         X = torch.tensor(X, dtype=torch.float32).to(device, non_blocking = True)
         with torch.no_grad():
             out = self(X)
-        return out.cpu().numpy().flatten()  # sin argmax, devolvemos el valor crudo
+        return out.cpu().numpy().flatten() 
 
     def train_loop(self, dataloader, loss_fn, optimizer, device):
         self.train()
         total_loss = 0
         for X, y in dataloader:
             X, y = X.to(device, non_blocking = True), y.to(device, non_blocking = True)
-            pred = self(X).squeeze(1)  # de (batch, 1) a (batch,) para que matchee con y
+            pred = self(X).squeeze(1)  
             loss = loss_fn(pred, y)
 
             loss.backward()
@@ -71,7 +72,6 @@ class MLP_regresion(nn.Module):
 
         best_val_loss = np.inf
         best_weights = None
-        #wait_count = 0
 
         for epoch in pbar:
             train_loss = self.train_loop(train_loader, loss_fn, optimizer, device)
@@ -79,17 +79,6 @@ class MLP_regresion(nn.Module):
 
             train_losses.append(train_loss)
             val_losses.append(val_loss)
-
-            #if val_loss < best_val_loss:
-            #    best_val_loss = val_loss
-            #    best_weights = copy.deepcopy(self.state_dict())
-            #    wait_count = 0
-            #else:
-            #    wait_count += 1
-            #    if wait_count >= waiting:
-            #        self.load_state_dict(best_weights)
-            #        pbar.set_postfix_str(f"early stopping -> epoca {epoch - waiting}")
-            #        break
 
             pbar.set_postfix({"epoch": f"{epoch}"})
         return train_losses, val_losses
@@ -126,7 +115,7 @@ class MLP_clasificacion(nn.Module):
 
         with torch.no_grad():
             mlp_stack = self(X)
-        return mlp_stack.argmax(dim=1).cpu().numpy() #numpy needs it to be in the cpu
+        return mlp_stack.argmax(dim=1).cpu().numpy() 
 
     def train_loop(self, dataloader, loss_fn, optimizer, device):
         self.train()
@@ -162,7 +151,6 @@ class MLP_clasificacion(nn.Module):
 
         best_val_loss = np.inf
         best_weights = None
-        #wait_count = 0
 
         for epoch in pbar:
             train_loss = self.train_loop(train_loader, loss_fn, optimizer, device)
@@ -170,18 +158,6 @@ class MLP_clasificacion(nn.Module):
 
             train_losses.append(train_loss)
             val_losses.append(val_loss)
-
-            #early stopping:
-            #if val_loss < best_val_loss:
-            #    best_val_loss = val_loss
-            #    best_weights = copy.deepcopy(self.state_dict())
-            #    wait_count = 0
-            #else:
-            #    wait_count += 1
-            #    if wait_count >= waiting:
-            #        self.load_state_dict(best_weights)
-            #        pbar.set_postfix_str(f"early stopping -> epoca {epoch - waiting}")
-            #        break
 
             pbar.set_postfix({"epoch":  f"{epoch}"})
         return train_losses, val_losses
